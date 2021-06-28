@@ -10,6 +10,8 @@
 #include <sys/socket.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <netinet/ip_icmp.h>
+
 
 // getpid
 // getuid
@@ -33,20 +35,76 @@ void interrupt(int param) {
 	exit(EXIT_SUCCESS);
 }
 
+int sock_;
+struct addrinfo* add_;
+
+
 void ping() {
 	printf("pinging...\n");
 
-	alarm(2);
+	char arr[84] = {0};
+	arr[0] = 8;
+
+	int             len = 0;
+	struct icmp     *icmp = (struct icmp *)arr;
+
+	icmp->icmp_type = ICMP_ECHO;
+	icmp->icmp_code = 0;
+	icmp->icmp_cksum = 125;
+	icmp->icmp_id = getpid();
+	icmp->icmp_seq = 1;
+//	memset (icmp->icmp_data, 0xa5, g_global->datalen);
+
+
+	int ret = sendto(sock_, arr, sizeof arr, 0, add_->ai_addr, sizeof(*add_->ai_addr));
+
+
+	if (ret < 0) {
+		perror("send");
+		exit(EXIT_FAILURE);
+	}
+
+	alarm(5);
 }
 
-void pong() {
+void pong(int sock) {
+	char			buffer[512];
+	ssize_t			ret;
+
+	struct iovec	io = {
+		.iov_base = NULL,
+		.iov_len = 0
+	};
+	struct msghdr	msg = {
+		.msg_name = NULL,
+		.msg_namelen = 0,
+		.msg_iov = &io,
+		.msg_iovlen = 1,
+		.msg_control = buffer,
+		.msg_controllen = sizeof(buffer),
+		.msg_flags = 0
+	};
+
+
+
 	while (true) {
 		// reading answer...
-		;
+		ret = recvmsg(sock, &msg, 0);
+
+		if (ret < 0) {
+			perror("Holy shit!");
+			exit(EXIT_FAILURE);
+		}
+		else if (ret == 0) {
+			printf("Nothing to read!\n");
+		}
+		else {
+			printf("Something arrived!\n");
+		}
 	}
 }
 
-int lookup_host (const char *host)
+struct addrinfo* lookup_host (const char *host)
 {
 	struct addrinfo hints, *res, *result;
 	int errcode;
@@ -62,7 +120,7 @@ int lookup_host (const char *host)
 	if (errcode != 0)
 	{
 		perror ("getaddrinfo");
-		return -1;
+		exit(EXIT_FAILURE);
 	}
 
 	res = result;
@@ -84,36 +142,21 @@ int lookup_host (const char *host)
 		printf ("IPv%d address: %s %s\n", res->ai_family == PF_INET6 ? 6 : 4,
 				addrstr, res->ai_canonname);
 
-		int icmp_sock = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
-		if (icmp_sock < 0) {
-			perror("");
-			exit(0);
-		}
-		printf("socket: %d\n", icmp_sock);
-
-		if (setsockopt(icmp_sock, IPPROTO_IP, IP_HDRINCL, (int[1]){1}, sizeof(int)) == -1) {
-			perror("");
-			exit(0);
-		}
-
 		res = res->ai_next;
 	}
 	else {
 		printf("No host...\n");
-		return -1;
+		exit(EXIT_FAILURE);
 	}
 
 	freeaddrinfo(result);
 
-	return 0;
+	return res;
 }
-
-
 
 
 int main(int ac, char **av) {
 	const char *url = "yandex.ru";
-
 
 	if (signal(SIGALRM, ping) == SIG_ERR) {
 		perror("alarm error");
@@ -125,11 +168,30 @@ int main(int ac, char **av) {
 		exit(EXIT_FAILURE);
 	}
 
+	// filling message
+	printf("header size: %zu\n", sizeof (struct iphdr));
+	struct icmphdr icmp_header;
 
-	lookup_host("yandex.ru");
-	struct in_addr	adr;
-	inet_pton(AF_INET, "192.168.0.1", &adr);
+	icmp_header.type = ICMP_ECHO;
+	icmp_header.code = 0;
+
+
+	struct addrinfo* adr = lookup_host(url);
+
+	int icmp_sock = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
+	if (icmp_sock < 0) {
+		perror("");
+		exit(0);
+	}
+	printf("socket: %d\n", icmp_sock);
+
+	if (setsockopt(icmp_sock, IPPROTO_IP, IP_HDRINCL, (int[1]){1}, sizeof(int)) == -1) {
+		perror("");
+		exit(0);
+	}
+	sock_ = icmp_sock;
+	add_ = adr;
 
 	ping();
-	pong();
+	pong(icmp_sock);
 }
