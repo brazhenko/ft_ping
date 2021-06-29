@@ -37,3 +37,8 @@ tcpdump -x "ip[2:2] == 84"
 	0x0040:  2425 2627 2829 2a2b 2c2d 2e2f 3031 3233
 	0x0050:  3435 3637
 ```
+
+### Useful links
+* http://www.netpatch.ru/windows-files/pingscan/raw_ping.c.html
+
+* http://www.n-cg.net/hec.htm
