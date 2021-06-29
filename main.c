@@ -136,9 +136,15 @@ void ping() {
 
 	printf("size: %ld\n", sz);
 
-	perror("??");
+	char tmpb[] = "\x45\x00\x00\x54\x32\xf2\x40\x00\x40\x01\x08\xb7\xac\x11\x00\x02"
+				"\x57\xfa\xfa\xf2\x08\x00\xde\xa6\x0e\x28\x00\x01\xdd\x74\xdb\x60"
+				"\x00\x00\x00\x00\x8c\x87\x07\x00\x00\x00\x00\x00\x10\x11\x12\x13"
+				"\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x20\x21\x22\x23"
+				"\x24\x25\x26\x27\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f\x30\x31\x32\x33"
+				"\x34\x35\x36\x37";
 
-	int ret = sendto(sock_, arr, sz, 0, &dest, sizeof(dest));
+//	int ret = sendto(sock_, arr, sz, 0, &dest, sizeof(dest));
+	int ret = sendto(sock_, tmpb, sz, 0, &dest, sizeof(dest));
 
 	if (ret < 0) {
 		perror("send");
@@ -155,8 +161,8 @@ void pong(int sock) {
 	ssize_t			ret;
 
 	struct iovec	io = {
-		.iov_base = NULL,
-		.iov_len = 0
+		.iov_base = buffer,
+		.iov_len = sizeof buffer
 	};
 	struct msghdr	msg = {
 		.msg_name = NULL,
