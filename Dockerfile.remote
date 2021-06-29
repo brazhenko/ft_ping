@@ -29,6 +29,7 @@ RUN apt-get update \
       iputils-ping \
       vim \
       git \
+      tcpdump \
   && apt-get clean
 
 RUN ( \
