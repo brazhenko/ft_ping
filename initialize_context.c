@@ -1,0 +1,153 @@
+#include "ping.h"
+
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <fcntl.h>
+
+ping_context_t ping_ctx = {};
+
+static void dump_usage(const char *bin_name) {
+    fprintf(stderr,
+        "\n"
+        "Usage\n"
+        "  %s [options] <destination>\n"
+        "\n"
+        "Options:\n"
+        "  <destination>      dns name or ip address\n"
+        "  -a                 use audible ping\n"
+        "  -c <count>         stop after <count> replies\n"
+        "  -D                 print timestamps\n"
+        "  -f                 flood ping\n"
+        "  -h                 print help and exit\n"
+        // "  -I <interface>     either interface name or address\n"
+        "  -i <interval>      seconds between sending each packet\n"
+        // "  -l <preload>       send <preload> number of packages while waiting replies\n"
+        // "  -m <mark>          tag the packets going out\n"
+        "  -n                 no dns name resolution\n"
+        // "  -p <pattern>       contents of padding byte\n"
+        "  -q                 quiet output\n"
+        "  -s <size>          use <size> as number of data bytes to be sent\n"
+        "  -t <ttl>           define time to live\n"
+        "  -v                 verbose output\n"
+        "  -V                 print version and exit\n"
+        "  -w <deadline>      reply wait <deadline> in seconds\n"
+        //  "  -W <timeout>       time to wait for response\n"
+        , bin_name);
+}
+
+static void dump_version() {
+    printf("%s\n", PING_VERSION_STR);
+}
+
+
+void set_default_args() {
+    // Set default payload size
+    ping_ctx.payload_size = 56;
+
+    // Set default ttl
+    int ttl_fd = open(PING_IPV4_DEFAULT_TTL_PATH, O_RDONLY);
+    char arr[1024] = {0};
+    if (ttl_fd == -1) {
+        perror("cannot open ttl var file");
+        exit(EXIT_FAILURE);
+    }
+    if (read(ttl_fd, arr,15
+            /* some random digit num which is greater than possible ttl*/ ) == -1) {
+        perror("cannot read ttl var file");
+        exit(EXIT_FAILURE);
+    }
+    close(ttl_fd);
+    ping_ctx.ttl = atoi(arr);
+
+}
+
+void initialize_context(int argc, char **argv) {
+    set_default_args();
+
+    int c;
+    opterr = 0;
+
+    while ((c = getopt(argc, argv, PING_AVL_FLAGS)) != -1)
+        switch (c)
+        {
+        case PING_QUIET:
+        case PING_NO_DNS_NAME:
+        case PING_AUDIBLE:
+        case PING_FLOOD:
+        case PING_VERBOSE:
+        case PING_TIMESTAMP_PREF:
+            ping_ctx.flags[c] = true;
+            break;
+        case PING_HELP:
+            dump_usage(argv[0]);
+            exit(EXIT_SUCCESS);
+        case PING_REPLIES_LIM:
+            ping_ctx.flags[c] = true;
+            // TODO Think of handling error...
+            ping_ctx.packet_replies_count = atoi(optarg);
+            break;
+        case PING_LIFETIME_LIM:
+            ping_ctx.flags[c] = true;
+            ping_ctx.seconds_to_work = atoi(optarg);
+            break;
+        case PING_INTERVAL:
+            ping_ctx.flags[c] = true;
+            ping_ctx.seconds_interval = atoi(optarg);
+            break;
+        case PING_PACKET_SZ:
+            ping_ctx.flags[c] = true;
+            ping_ctx.payload_size = atoi(optarg);
+            if (!(PING_MIN_PAYLOAD_SZ <= ping_ctx.payload_size && ping_ctx.payload_size <= PING_MAX_PAYLOAD_SZ)) {
+                fprintf(stderr, "%s: invalid argument: '%s': out of range: %d <= value <= %d\n",
+                        argv[0], optarg, PING_MIN_PAYLOAD_SZ, PING_MAX_PAYLOAD_SZ);
+                exit(EXIT_FAILURE);
+            }
+            break;
+        case PING_TTL:
+            ping_ctx.flags[c] = true;
+            ping_ctx.ttl = atoi(optarg);
+            if (!(PING_TTL_MIN <= ping_ctx.ttl && ping_ctx.ttl <= PING_TTL_MAX)) {
+                fprintf(stderr, "%s: invalid argument: '%s': out of range: %d <= value <= %d\n",
+                        argv[0], optarg, PING_TTL_MIN, PING_TTL_MAX);
+                exit(EXIT_FAILURE);
+            }
+            break;
+        case PING_VERSION:
+            dump_version();
+            exit(EXIT_FAILURE);
+        case '?':
+            if (optopt == 'c') {
+                fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+            }
+            else if (isprint(optopt)) {
+                fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+            }
+            else {
+                fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
+            }
+            exit(EXIT_FAILURE);
+        default:
+            abort ();
+        }
+
+    if (optind == argc) {
+        // No dest address
+        fprintf(stderr, "%s: usage error: Destination address required\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+
+    ping_ctx.dest = argv[optind];
+
+    // Dump argv data
+    for (int i = 0; i < 256; i++) {
+        if (ping_ctx.flags[i]) {
+            printf("%c", i);
+        }
+    }
+    printf("\n");
+    printf("destination: %s\n", ping_ctx.dest);
+    printf("ttl: %d\n", ping_ctx.ttl);
+    printf("payloadsize: %d\n", ping_ctx.payload_size);
+}

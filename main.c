@@ -35,7 +35,7 @@
 // *printf
 
 
-ping_context_t ping_ctx = {};
+extern ping_context_t ping_ctx;
 
 void interrupt(int param) {
 	printf("exit: %d\n", param);
@@ -101,6 +101,7 @@ void ping() {
 
 
 	struct in_addr addr;
+
 	if (inet_pton(AF_INET, "195.133.239.83", &addr) < 0) {
 		perror("my address");
 		exit(EXIT_FAILURE);
@@ -110,7 +111,6 @@ void ping() {
 		perror("dest address");
 		exit(EXIT_FAILURE);
 	}
-
 	ip_header->ip_dst = addr;
 
 	ip_header->ip_sum = ipv4_checksum((uint16_t *)ip_header, sizeof(*ip_header) / 2);
@@ -144,14 +144,15 @@ void ping() {
 				"\x34\x35\x36\x37";
 
 //	int ret = sendto(sock_, arr, sz, 0, &dest, sizeof(dest));
-	int ret = sendto(sock_, tmpb, sz, 0, &dest, sizeof(dest));
+	size_t ret = sendto(sock_, tmpb, sz, 0, (struct sockaddr *)&dest, sizeof(dest));
+
 
 	if (ret < 0) {
 		perror("send");
 		exit(EXIT_FAILURE);
 	}
 
-	printf("ret: %d\n", ret);
+	printf("ret: %zu\n", ret);
 
 	alarm(5);
 }
@@ -200,8 +201,7 @@ struct addrinfo* lookup_host (const char *host)
 
 	memset (&hints, 0, sizeof (hints));
 	hints.ai_family = PF_UNSPEC;
-//	hints.ai_socktype = SOCK_STREAM;
-//	hints.ai_flags |= AI_CANONNAME;
+	hints.ai_flags |= AI_CANONNAME;
 
 	errcode = getaddrinfo(host, NULL, &hints, &result);
 	if (errcode != 0) {
@@ -235,91 +235,8 @@ struct addrinfo* lookup_host (const char *host)
 	return res;
 }
 
-
-void set_default_args() {
-	// Set default payload size
-	ping_ctx.payload_size = 56;
-
-	// Set default system ttl of packets
-	int ttl_fd = open(PING_IPV4_DEFAULT_TTL_PATH, O_RDONLY);
-	char arr[1024] = {0};
-	if (ttl_fd == -1) {
-		perror("cannot open ttl var file");
-		exit(EXIT_FAILURE);
-	}
-	if (read(ttl_fd, arr,15
-			/* some random digit num which is greater than possible ttl*/ ) == -1) {
-		perror("cannot read ttl var file");
-		exit(EXIT_FAILURE);
-	}
-	ping_ctx.ttl = atoi(arr);
-
-
-}
-
-void parse_argv(int argc, char **argv) {
-	set_default_args();
-
-	int c;
-	opterr = 0;
-
-	while ((c = getopt(argc, argv, PING_AVL_FLAGS)) != -1)
-		switch (c)
-		{
-		case PING_VERBOSE:
-			ping_ctx.flags[c] = true;
-			break;
-		case PING_HELP:
-			// print_help_message
-			exit(EXIT_SUCCESS);
-		case PING_PACKET_SZ:
-			ping_ctx.flags[c] = true;
-			ping_ctx.payload_size = atoi(optarg);
-			if (!(PING_MIN_PAYLOAD_SZ <= ping_ctx.payload_size && ping_ctx.payload_size <= PING_MAX_PAYLOAD_SZ)) {
-				fprintf(stderr,
-						"%s: invalid argument: '%s': out of range: %d <= value <= %d",
-						argv[0], optarg, PING_MIN_PAYLOAD_SZ, PING_MAX_PAYLOAD_SZ);
-				exit(EXIT_FAILURE);
-			}
-			break;
-		case '?':
-			if (optopt == 'c') {
-				fprintf(stderr, "Option -%c requires an argument.\n", optopt);
-			}
-			else if (isprint(optopt)) {
-				fprintf(stderr, "Unknown option `-%c'.\n", optopt);
-			}
-			else {
-				fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
-			}
-			exit(EXIT_FAILURE);
-		default:
-			abort ();
-		}
-
-	if (optind == argc) {
-		// No dest address
-		fprintf(stderr, "%s: usage error: Destination address required", argv[0]);
-		exit(EXIT_FAILURE);
-	}
-
-	ping_ctx.dest = argv[optind];
-
-	// Dump argv data
-	for (int i = 0; i < 256; i++) {
-		if (ping_ctx.flags[i]) {
-			printf("%c", i);
-		}
-	}
-	printf("\n");
-	printf("destination: %s\n", ping_ctx.dest);
-	printf("ttl: %d\n", ping_ctx.ttl);
-	printf("payloadsize: %d\n", ping_ctx.payload_size);
-}
-
 int main(int argc, char **argv) {
-	parse_argv(argc, argv);
-
+    initialize_context(argc, argv);
 
 	if (signal(SIGALRM, ping) == SIG_ERR) {
 		perror("alarm error");

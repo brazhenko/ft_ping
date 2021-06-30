@@ -3,4 +3,4 @@ project(ft_ping C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(ft_ping main.c ping.h)
+add_executable(ft_ping main.c ping.h initialize_context.c)
