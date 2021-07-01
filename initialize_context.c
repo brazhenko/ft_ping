@@ -21,19 +21,14 @@ static void dump_usage(const char *bin_name) {
         "  -D                 print timestamps\n"
         "  -f                 flood ping\n"
         "  -h                 print help and exit\n"
-        // "  -I <interface>     either interface name or address\n"
         "  -i <interval>      seconds between sending each packet\n"
-        // "  -l <preload>       send <preload> number of packages while waiting replies\n"
-        // "  -m <mark>          tag the packets going out\n"
         "  -n                 no dns name resolution\n"
-        // "  -p <pattern>       contents of padding byte\n"
         "  -q                 quiet output\n"
         "  -s <size>          use <size> as number of data bytes to be sent\n"
         "  -t <ttl>           define time to live\n"
         "  -v                 verbose output\n"
         "  -V                 print version and exit\n"
         "  -w <deadline>      reply wait <deadline> in seconds\n"
-        //  "  -W <timeout>       time to wait for response\n"
         , bin_name);
 }
 
@@ -42,7 +37,7 @@ static void dump_version() {
 }
 
 
-void set_default_args() {
+static void set_default_args() {
     // Set default payload size
     ping_ctx.payload_size = 56;
 

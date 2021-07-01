@@ -48,13 +48,13 @@ struct addrinfo* add_;
 static uint16_t ipv4_checksum(const uint16_t *words, int wordcount) {
 	uint32_t tmp = 0;
 
-	for (int i = 0; i< wordcount*2; i++) {
-		for (int j = 7; j > -1; j--) {
-			printf(((unsigned char*)words)[i] >> j & 1 ? "1" : "0");
-		}
-		printf("|");
-
-	}
+//	for (int i = 0; i< wordcount*2; i++) {
+//		for (int j = 7; j > -1; j--) {
+//			printf(((unsigned char*)words)[i] >> j & 1 ? "1" : "0");
+//		}
+//		printf("|");
+//
+//	}
 
 //	0100 0101 | 0000 0000
 //	0000 0000 | 0101 0100
@@ -70,19 +70,21 @@ static uint16_t ipv4_checksum(const uint16_t *words, int wordcount) {
 //  0111 0100 1110 0010
 
 	for (int i = 0; i < wordcount; i++) {
-		int a = __bswap_16(words[i]);
+		int a = (words[i]);
 		tmp += a;
 		tmp += (tmp >> 16);
 		tmp &= UINT16_MAX;
 	}
 
-	return (tmp) ^ UINT16_MAX;
+	return (tmp ^ UINT16_MAX);
 }
 
 void ping() {
 	printf("pinging...\n");
 
 	size_t sz = sizeof (struct ip) + sizeof (struct icmphdr) + ping_ctx.payload_size;
+
+    printf("ip: %zu, icmp: %zu\n", sizeof (struct ip), sizeof (struct icmphdr));
 
 	char arr[sz];
 	memset(arr, 0, sz);
@@ -124,7 +126,6 @@ void ping() {
 	icmp_header->icmp_seq = htons(1);
 
 
-
 	struct sockaddr_in dest;
 	memset(&dest, 0, sizeof dest);
 
@@ -136,15 +137,68 @@ void ping() {
 
 	printf("size: %ld\n", sz);
 
-	char tmpb[] = "\x45\x00\x00\x54\x32\xf2\x40\x00\x40\x01\x08\xb7\xac\x11\x00\x02"
-				"\x57\xfa\xfa\xf2\x08\x00\xde\xa6\x0e\x28\x00\x01\xdd\x74\xdb\x60"
-				"\x00\x00\x00\x00\x8c\x87\x07\x00\x00\x00\x00\x00\x10\x11\x12\x13"
-				"\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x20\x21\x22\x23"
-				"\x24\x25\x26\x27\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f\x30\x31\x32\x33"
-				"\x34\x35\x36\x37";
 
-//	int ret = sendto(sock_, arr, sz, 0, &dest, sizeof(dest));
-	size_t ret = sendto(sock_, tmpb, sz, 0, (struct sockaddr *)&dest, sizeof(dest));
+    //  0x0000:  45 00 00 54    00 01 00 00 40 01 74 e2  c3 85 ef 53
+    //  0x0010:  57 fa fa f2    08 00 00 00 00 00 00 01  42 42 42 42
+    //  0x0020:  42 42 42 42    42 42 42 42 42 42 42 42  42 42 42 42
+    //  0x0030:  42 42 42 42    42 42 42 42 42 42 42 42  42 42 42 42
+    //  0x0040:  42 42 42 42    42 42 42 42 42 42 42 42  42 42 42 42
+    //  0x0050:  42 42 42 42
+
+	// Original
+	//  0x0000: [45 00 00 54    32 f2 40 00 40 01 08 b7  ac 11 00 02
+    //	0x0010:  57 fa fa f2]  [08 00 de a6 0e 28 00 01] dd 74 db 60
+    //	0x0020:  00 00 00 00    8c 87 07 00 00 00 00 00  10 11 12 13
+    //	0x0030:  14 15 16 17    18 19 1a 1b 1c 1d 1e 1f  20 21 22 23
+    //	0x0040:  24 25 26 27    28 29 2a 2b 2c 2d 2e 2f  30 31 32 33
+    //	0x0050:  34 35 36 37
+
+
+	char tmpb[] = "\x45\x00\x00\x54\x32\xf2\x40\x00\x40\x01\x08\xb7\xac\x11\x00\x02"
+				"\x57\xfa\xfa\xf2\x08\x00\xde\xa6\x0e\x28\x00\x01\x42\x42\x42\x42"
+                "\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42"
+                "\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42"
+                "\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42\x42"
+                "\x42\x42\x42\x42"
+//                "\x57\xfa\xfa\xf2\x08\x00\xde\xa6\x0e\x28\x00\x01\xdd\x74\xdb\x60"
+//				"\x00\x00\x00\x00\x8c\x87\x07\x00\x00\x00\x00\x00\x10\x11\x12\x13"
+//				"\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f\x20\x21\x22\x23"
+//				"\x24\x25\x26\x27\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f\x30\x31\x32\x33"
+//				"\x34\x35\x36\x37"
+				;
+
+    char tmp28[] = "\x45\x00\x00\x1c\x51\x92\x40\x00\x40\x01"
+                   "\xea\x4e" // чексумма
+
+                   "\xac\x11\x00\x02\x57\xfa\xfa\xf2"
+
+
+                   "\x08\x00\xf4\x8b\x03\x6f\x00\x05";
+
+    char tmp30[] = "\x45\x00\x00\x1e\x6f\x9b\x40\x00\x40\x01\xcc\x43\xac\x11\x00\x02\x57\xfa\xfa\xf2"
+
+                   "\x08\x00"
+                   "\xed\xfc" // чексумма
+                   "\x0a\x00\x00\x02"
+                   "\x00\x01";
+
+
+    memcpy(arr, tmpb, 84);
+
+    printf("ip checksum: %u\n", ip_header->ip_sum);
+    ip_header->ip_sum = 0;
+
+    ip_header->ip_sum = ipv4_checksum((uint16_t *)ip_header, sizeof *ip_header / 2);
+    printf("ip checksum: %u\n", ip_header->ip_sum);
+
+    printf("icmp checksum: %u\n", icmp_header->icmp_cksum);
+    icmp_header->icmp_cksum = 0;
+    icmp_header->icmp_cksum = ipv4_checksum((uint16_t *)icmp_header, ((sizeof (struct icmphdr)) + ping_ctx.payload_size) / 2);
+    printf("icmp checksum: %u\n", icmp_header->icmp_cksum);
+    printf("icmp size: %zu\n", sizeof (struct icmphdr));
+
+    size_t ret = sendto(sock_, arr, 84, 0, (struct sockaddr *)&dest, sizeof(dest));
+//	size_t ret = sendto(sock_, tmpb, sz, 0, (struct sockaddr *)&dest, sizeof(dest));
 
 
 	if (ret < 0) {
