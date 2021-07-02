@@ -5,7 +5,12 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <fcntl.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
+
+struct addrinfo* lookup_host (const char *host);
 ping_context_t ping_ctx = {};
 
 static void dump_usage(const char *bin_name) {
@@ -38,6 +43,9 @@ static void dump_version() {
 
 
 static void set_default_args() {
+    // Clear up the structure
+    memset(&ping_ctx, 0, sizeof ping_ctx);
+
     // Set default payload size
     ping_ctx.payload_size = 56;
 
@@ -134,6 +142,23 @@ void initialize_context(int argc, char **argv) {
     }
 
     ping_ctx.dest = argv[optind];
+
+    int icmp_sock = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
+    if (icmp_sock < 0) {
+        perror("cannot create socket");
+        exit(EXIT_FAILURE);
+    }
+    printf("socket: %d\n", icmp_sock);
+
+    if (setsockopt(icmp_sock, IPPROTO_IP, IP_HDRINCL, (int[1]){1}, sizeof(int)) == -1) {
+        perror("cannot set sock option");
+        exit(EXIT_FAILURE);
+    }
+
+    ping_ctx.icmp_sock = icmp_sock;
+
+    ping_ctx.addr_info = lookup_host(ping_ctx.dest);
+
 
     // Dump argv data
     for (int i = 0; i < 256; i++) {

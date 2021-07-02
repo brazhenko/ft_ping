@@ -29,6 +29,8 @@
 struct s_ping_context {
 	bool        flags[256];
 	const char  *dest;
+    int         icmp_sock;
+    struct addrinfo*    addr_info;
 	int         payload_size;
 	size_t      packet_replies_count;
 	size_t      seconds_to_work;

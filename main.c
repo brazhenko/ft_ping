@@ -42,32 +42,8 @@ void interrupt(int param) {
 	exit(EXIT_SUCCESS);
 }
 
-int sock_;
-struct addrinfo* add_;
-
-static uint16_t ipv4_checksum(const uint16_t *words, int wordcount) {
+static uint16_t ipv4_icmp_checksum(const uint16_t *words, int wordcount) {
 	uint32_t tmp = 0;
-
-//	for (int i = 0; i< wordcount*2; i++) {
-//		for (int j = 7; j > -1; j--) {
-//			printf(((unsigned char*)words)[i] >> j & 1 ? "1" : "0");
-//		}
-//		printf("|");
-//
-//	}
-
-//	0100 0101 | 0000 0000
-//	0000 0000 | 0101 0100
-//	0000 0000 | 0000 0001
-//	0000 0000 | 0000 0000
-//	0100 0000 | 0000 0001
-//	0000 0000 | 0000 0000
-//	1100 0011 | 1000 0101
-//	1110 1111 | 0101 0011
-//	0101 0111 | 1111 1010
-//	1111 1010 | 1111 0010
-//	0111 0100 1110 0010
-//  0111 0100 1110 0010
 
 	for (int i = 0; i < wordcount; i++) {
 		int a = (words[i]);
@@ -115,7 +91,8 @@ void ping() {
 	}
 	ip_header->ip_dst = addr;
 
-	ip_header->ip_sum = ipv4_checksum((uint16_t *)ip_header, sizeof(*ip_header) / 2);
+	ip_header->ip_sum = ipv4_icmp_checksum((uint16_t *)ip_header,
+            sizeof(*ip_header) / 2);
 
 	printf("%d\n", ip_header->ip_sum);
 
@@ -129,7 +106,7 @@ void ping() {
 	struct sockaddr_in dest;
 	memset(&dest, 0, sizeof dest);
 
-	dest.sin_addr.s_addr = ((struct sockaddr_in *) add_->ai_addr)->sin_addr.s_addr;
+	dest.sin_addr.s_addr = ((struct sockaddr_in *)ping_ctx.addr_info->ai_addr)->sin_addr.s_addr;
 	dest.sin_family = AF_INET;
 
 	char *payload_ptr = (char *)(arr + sizeof (struct iphdr) + sizeof (struct icmphdr));
@@ -183,21 +160,23 @@ void ping() {
                    "\x00\x01";
 
 
-    memcpy(arr, tmpb, 84);
+    memcpy(arr, tmpb, (sizeof (struct iphdr) + sizeof (struct icmphdr) + ping_ctx.payload_size));
 
     printf("ip checksum: %u\n", ip_header->ip_sum);
     ip_header->ip_sum = 0;
 
-    ip_header->ip_sum = ipv4_checksum((uint16_t *)ip_header, sizeof *ip_header / 2);
+    ip_header->ip_sum = ipv4_icmp_checksum((uint16_t *)ip_header,
+            sizeof *ip_header / 2);
     printf("ip checksum: %u\n", ip_header->ip_sum);
 
     printf("icmp checksum: %u\n", icmp_header->icmp_cksum);
     icmp_header->icmp_cksum = 0;
-    icmp_header->icmp_cksum = ipv4_checksum((uint16_t *)icmp_header, ((sizeof (struct icmphdr)) + ping_ctx.payload_size) / 2);
+    icmp_header->icmp_cksum = ipv4_icmp_checksum((uint16_t *)icmp_header,
+            ((sizeof(struct icmphdr)) + ping_ctx.payload_size) / 2);
     printf("icmp checksum: %u\n", icmp_header->icmp_cksum);
     printf("icmp size: %zu\n", sizeof (struct icmphdr));
 
-    size_t ret = sendto(sock_, arr, 84, 0, (struct sockaddr *)&dest, sizeof(dest));
+    size_t ret = sendto(ping_ctx.icmp_sock, arr, (sizeof (struct iphdr) + sizeof (struct icmphdr) + ping_ctx.payload_size), 0, (struct sockaddr *)&dest, sizeof(dest));
 //	size_t ret = sendto(sock_, tmpb, sz, 0, (struct sockaddr *)&dest, sizeof(dest));
 
 
@@ -211,7 +190,7 @@ void ping() {
 	alarm(5);
 }
 
-void pong(int sock) {
+void pong() {
 	char			buffer[512];
 	ssize_t			ret;
 
@@ -231,7 +210,7 @@ void pong(int sock) {
 
 	while (true) {
 		// reading answer...
-		ret = recvmsg(sock, &msg, 0);
+		ret = recvmsg(ping_ctx.icmp_sock, &msg, 0);
 
 		if (ret < 0) {
 			perror("Holy shit!");
@@ -293,49 +272,15 @@ int main(int argc, char **argv) {
     initialize_context(argc, argv);
 
 	if (signal(SIGALRM, ping) == SIG_ERR) {
-		perror("alarm error");
+		perror("signal alarm error");
 		exit(EXIT_FAILURE);
 	}
 
 	if (signal(SIGINT, interrupt) == SIG_ERR) {
-		perror("interruption error");
+		perror("signal interrupt error");
 		exit(EXIT_FAILURE);
 	}
-
-	// filling message
-	printf("header size: %zu\n", sizeof (struct iphdr));
-	struct icmphdr icmp_header;
-
-	icmp_header.type = ICMP_ECHO;
-	icmp_header.code = 0;
-
-
-
-
-
-	struct addrinfo* adr = lookup_host(ping_ctx.dest);
-
-
-	int icmp_sock = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
-	if (icmp_sock < 0) {
-		perror("cannot create socket");
-		exit(EXIT_FAILURE);
-	}
-	printf("socket: %d\n", icmp_sock);
-
-
-
-	if (setsockopt(icmp_sock, IPPROTO_IP, IP_HDRINCL, (int[1]){1}, sizeof(int)) == -1) {
-		perror("cannot set sock option");
-		exit(EXIT_FAILURE);
-	}
-
-
-
-	sock_ = icmp_sock;
-	add_ = adr;
-
 
 	ping();
-	pong(icmp_sock);
+	pong();
 }
