@@ -41,7 +41,7 @@ struct s_ping_context {
 
 typedef struct s_ping_context ping_context_t;
 
-void initialize_context(int argc, char **argv);
-
+void    initialize_context(int argc, char **argv);
+void    initialize_signals();
 
 #endif

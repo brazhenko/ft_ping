@@ -32,10 +32,7 @@
 
 extern ping_context_t ping_ctx;
 
-void interrupt(int param) {
-	printf("exit: %d\n", param);
-	exit(EXIT_SUCCESS);
-}
+
 
 static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t wordcount) {
 	uint32_t tmp = 0;
@@ -204,18 +201,10 @@ struct addrinfo* ping_lookup(const char *bin_name, const char *host)
 	return res;
 }
 
+
 int main(int argc, char **argv) {
     initialize_context(argc, argv);
-
-    // Init signals
-	if (signal(SIGALRM, ping) == SIG_ERR) {
-		perror("signal alarm error");
-		exit(EXIT_FAILURE);
-	}
-	if (signal(SIGINT, interrupt) == SIG_ERR) {
-		perror("signal interrupt error");
-		exit(EXIT_FAILURE);
-	}
+    initialize_signals();
 
 	// Detached pinger
     pthread_t thread;
