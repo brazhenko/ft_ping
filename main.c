@@ -33,7 +33,6 @@
 extern ping_context_t ping_ctx;
 
 
-
 static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t wordcount) {
 	uint32_t tmp = 0;
 
@@ -62,8 +61,8 @@ int send_echo_msg_v4(
 
     printf("ID: %d\n", id);
 
-    char message[entire_msg_size]; // God sorry for VLA...
-    memset(message, 0, entire_msg_size); // Clear buffer
+    char message[entire_msg_size + 1]; // God sorry for VLA...
+    memset(message, 0, entire_msg_size + 1); // Clear buffer
 
     // Filling the IP header
     struct ip *ip_header = (struct ip *)message;
@@ -95,7 +94,8 @@ int send_echo_msg_v4(
     // Calculating ICMP checksum after filling payload
     icmp_header->icmp_cksum = 0;
     icmp_header->icmp_cksum = ipv4_icmp_checksum((uint16_t *)icmp_header,
-            (icmphdr_size + ping_ctx.payload_size) / 2);
+            (icmphdr_size + ping_ctx.payload_size) / 2
+            + ((icmphdr_size + ping_ctx.payload_size) & 1));
 
     // Actually send our message
     ssize_t ret = sendto(
@@ -156,6 +156,15 @@ void pong() {
 		else {
 			printf("Something arrived!\n");
 		}
+
+		if (ping_ctx.flags[PING_AUDIBLE]) {
+            printf("%c", '\a');
+            fflush(stdout);
+		}
+
+
+
+
 	}
 }
 
