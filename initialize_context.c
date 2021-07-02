@@ -157,8 +157,26 @@ void initialize_context(int argc, char **argv) {
 
     ping_ctx.icmp_sock = icmp_sock;
 
-    ping_ctx.addr_info = lookup_host(ping_ctx.dest);
+    ping_ctx.dest_addr_info = lookup_host(ping_ctx.dest);
 
+    char hostname[1024] = {0};
+    gethostname(hostname, sizeof hostname - 1);
+
+    struct addrinfo hints, *info, *p;;
+    memset(&hints, 0, sizeof (hints));
+    hints.ai_family = PF_UNSPEC;
+    hints.ai_flags |= AI_CANONNAME;
+
+    int errcode = getaddrinfo(hostname, NULL, &hints, &info);
+    if (errcode != 0) {
+        perror ("getaddrinfo");
+        exit(EXIT_FAILURE);
+    }
+    ping_ctx.src_addr_info = info;
+
+    for(p = info; p != NULL; p = p->ai_next) {
+        printf("hostname: %s\n", p->ai_canonname);
+    }
 
     // Dump argv data
     for (int i = 0; i < 256; i++) {
@@ -167,7 +185,5 @@ void initialize_context(int argc, char **argv) {
         }
     }
     printf("\n");
-    printf("destination: %s\n", ping_ctx.dest);
-    printf("ttl: %d\n", ping_ctx.ttl);
-    printf("payloadsize: %d\n", ping_ctx.payload_size);
+
 }
