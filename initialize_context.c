@@ -64,6 +64,8 @@ static void set_default_args() {
     close(ttl_fd);
     ping_ctx.ttl = atoi(arr);
 
+    // Set default interval between echoes
+    ping_ctx.interval_between_echoes = 1;
 }
 
 void initialize_context(int argc, char **argv) {
@@ -86,19 +88,28 @@ void initialize_context(int argc, char **argv) {
         case PING_HELP:
             dump_usage(argv[0]);
             exit(EXIT_SUCCESS);
-        case PING_REPLIES_LIM:
+        case PING_RESPONSE_LIM:
             ping_ctx.flags[c] = true;
-            // TODO Think of handling error...
-            ping_ctx.packet_replies_count = atoi(optarg);
+            ping_ctx.response_count_limit = atoi(optarg);
+            if (!(PING_RESPONSE_COUNT_MIN <= ping_ctx.response_count_limit && ping_ctx.response_count_limit <= PING_RESPONSE_COUNT_MAX)) {
+                fprintf(stderr, "%s: invalid argument: '%s': out of range: %d <= value <= %d\n",
+                        argv[0], optarg, PING_RESPONSE_COUNT_MIN, PING_RESPONSE_COUNT_MAX);
+                exit(EXIT_FAILURE);
+            }
             break;
         case PING_LIFETIME_LIM:
             ping_ctx.flags[c] = true;
             ping_ctx.seconds_to_work = atoi(optarg);
+            if (!(PING_LIFETIME_SEC_MIN <= ping_ctx.seconds_to_work && ping_ctx.seconds_to_work <= PING_LEFETIME_SEC_MAX)) {
+                fprintf(stderr, "%s: invalid argument: '%s': out of range: %d <= value <= %d\n",
+                        argv[0], optarg, PING_LIFETIME_SEC_MIN  , PING_LEFETIME_SEC_MAX);
+                exit(EXIT_FAILURE);
+            }
             break;
         case PING_INTERVAL:
             ping_ctx.flags[c] = true;
             ping_ctx.interval_between_echoes = atoi(optarg);
-            if (!(PING_INTERVAL_MIN <= ping_ctx.payload_size && ping_ctx.payload_size <= PING_INTERVAL_MAX)) {
+            if (!(PING_INTERVAL_MIN <= ping_ctx.interval_between_echoes && ping_ctx.interval_between_echoes <= PING_INTERVAL_MAX)) {
                 fprintf(stderr, "%s: invalid argument: '%s': out of range: %d <= value <= %d\n",
                         argv[0], optarg, PING_INTERVAL_MIN, PING_INTERVAL_MAX);
                 exit(EXIT_FAILURE);

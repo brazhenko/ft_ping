@@ -127,6 +127,7 @@ void ping() {
 void pong() {
 	char			buffer[512];
 	ssize_t			ret;
+	int             response_count = 0;
 
 	struct iovec	io = {
 		.iov_base = buffer,
@@ -161,7 +162,10 @@ void pong() {
             printf("%c", '\a');
             fflush(stdout);
 		}
-
+        response_count++;
+        if (ping_ctx.flags[PING_RESPONSE_LIM] && response_count == ping_ctx.response_count_limit) {
+            raise(SIGINT);
+        }
 
 
 

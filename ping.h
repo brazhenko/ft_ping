@@ -3,6 +3,7 @@
 
 # include <stdbool.h>
 # include <stddef.h>
+# include <limits.h>
 
 # define PING_AVL_FLAGS	        "vhs:fac:Dw:Vi:nqt:"
 # define PING_VERBOSE           'v'
@@ -10,7 +11,7 @@
 # define PING_PACKET_SZ         's'
 # define PING_FLOOD             'f'
 # define PING_AUDIBLE           'a'
-# define PING_REPLIES_LIM       'c'
+# define PING_RESPONSE_LIM      'c'
 # define PING_TIMESTAMP_PREF    'D'
 # define PING_LIFETIME_LIM      'w'
 # define PING_VERSION           'V'
@@ -25,6 +26,10 @@
 # define PING_TTL_MAX               255
 # define PING_INTERVAL_MIN          0
 # define PING_INTERVAL_MAX          10000
+# define PING_RESPONSE_COUNT_MIN    1
+# define PING_RESPONSE_COUNT_MAX    INT_MAX
+# define PING_LIFETIME_SEC_MIN      1
+# define PING_LEFETIME_SEC_MAX      1000000
 # define PING_IPV4_DEFAULT_TTL_PATH "/proc/sys/net/ipv4/ip_default_ttl"
 # define PING_VERSION_STR           "ft_ping v0.0.1"
 
@@ -35,7 +40,7 @@ struct s_ping_context {
     struct addrinfo*    dest_addr_info;
     struct addrinfo*    src_addr_info;
 	int         payload_size;
-	size_t      packet_replies_count;
+	size_t      response_count_limit;
 	size_t      seconds_to_work;
 	size_t      interval_between_echoes;
 	int         ttl;
