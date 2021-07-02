@@ -11,6 +11,7 @@
 #include "ping.h"
 #include <byteswap.h>
 #include <pthread.h>
+#include <sys/time.h>
 
 // getpid
 // getuid
@@ -128,6 +129,8 @@ void pong() {
 	char			buffer[512];
 	ssize_t			ret;
 	int             response_count = 0;
+    struct timeval  current_time;
+    char            output[1024];
 
 	struct iovec	io = {
 		.iov_base = buffer,
@@ -157,6 +160,18 @@ void pong() {
 		else {
 			printf("Something arrived!\n");
 		}
+		// Clear output print buffer...
+        memset(output, 0, sizeof output);
+
+        if (ping_ctx.flags[PING_TIMESTAMP_PREF]) {
+            if (gettimeofday(&current_time, NULL) != 0) {
+                perror("cannot get time");
+                exit(EXIT_FAILURE);
+            }
+            snprintf(output, sizeof output, "[%zu.%06zu] ", current_time.tv_sec, current_time.tv_usec);
+        }
+
+
 
 		if (ping_ctx.flags[PING_AUDIBLE]) {
             printf("%c", '\a');
@@ -167,8 +182,7 @@ void pong() {
             raise(SIGINT);
         }
 
-
-
+        printf("%s\n", output);
 	}
 }
 
