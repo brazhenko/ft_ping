@@ -97,7 +97,12 @@ void initialize_context(int argc, char **argv) {
             break;
         case PING_INTERVAL:
             ping_ctx.flags[c] = true;
-            ping_ctx.seconds_interval = atoi(optarg);
+            ping_ctx.interval_between_echoes = atoi(optarg);
+            if (!(PING_INTERVAL_MIN <= ping_ctx.payload_size && ping_ctx.payload_size <= PING_INTERVAL_MAX)) {
+                fprintf(stderr, "%s: invalid argument: '%s': out of range: %d <= value <= %d\n",
+                        argv[0], optarg, PING_INTERVAL_MIN, PING_INTERVAL_MAX);
+                exit(EXIT_FAILURE);
+            }
             break;
         case PING_PACKET_SZ:
             ping_ctx.flags[c] = true;

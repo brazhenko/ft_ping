@@ -120,7 +120,7 @@ void ping() {
             exit(EXIT_FAILURE);
         }
 
-        sleep(2);
+        sleep(ping_ctx.interval_between_echoes);
     }
 }
 

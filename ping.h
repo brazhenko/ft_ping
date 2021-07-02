@@ -23,6 +23,8 @@
 # define PING_MAX_PAYLOAD_SZ        127992
 # define PING_TTL_MIN               0
 # define PING_TTL_MAX               255
+# define PING_INTERVAL_MIN          0
+# define PING_INTERVAL_MAX          10000
 # define PING_IPV4_DEFAULT_TTL_PATH "/proc/sys/net/ipv4/ip_default_ttl"
 # define PING_VERSION_STR           "ft_ping v0.0.1"
 
@@ -35,7 +37,7 @@ struct s_ping_context {
 	int         payload_size;
 	size_t      packet_replies_count;
 	size_t      seconds_to_work;
-	size_t      seconds_interval;
+	size_t      interval_between_echoes;
 	int         ttl;
 };
 
