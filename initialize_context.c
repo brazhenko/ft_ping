@@ -10,7 +10,7 @@
 #include <netdb.h>
 
 
-struct addrinfo* lookup_host (const char *host);
+struct addrinfo* ping_lookup(const char *bin_name, const char *host);
 ping_context_t ping_ctx = {};
 
 static void dump_usage(const char *bin_name) {
@@ -157,7 +157,7 @@ void initialize_context(int argc, char **argv) {
 
     ping_ctx.icmp_sock = icmp_sock;
 
-    ping_ctx.dest_addr_info = lookup_host(ping_ctx.dest);
+    ping_ctx.dest_addr_info = ping_lookup(argv[0], ping_ctx.dest);
 
     char hostname[1024] = {0};
     gethostname(hostname, sizeof hostname - 1);

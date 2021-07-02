@@ -10,6 +10,7 @@
 #include <netinet/ip_icmp.h>
 #include "ping.h"
 #include <byteswap.h>
+#include <pthread.h>
 
 // getpid
 // getuid
@@ -49,7 +50,12 @@ static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t wordcount) {
 	return (tmp ^ UINT16_MAX);
 }
 
-int send_echo_msg(int sock, uint16_t id, uint8_t ttl, uint16_t icmp_seq_num) {
+int send_echo_msg_v4(
+        int sock,
+        uint16_t id,
+        uint8_t ttl,
+        uint16_t icmp_seq_num) {
+
     const size_t
             entire_msg_size = sizeof (struct ip)
             + sizeof (struct icmphdr)
@@ -112,11 +118,13 @@ int send_echo_msg(int sock, uint16_t id, uint8_t ttl, uint16_t icmp_seq_num) {
 }
 
 void ping() {
-    if (send_echo_msg(ping_ctx.icmp_sock, getpid(), ping_ctx.ttl, 1) != 0) {
-        exit(EXIT_FAILURE);
-    }
+    while (true) {
+        if (send_echo_msg_v4(ping_ctx.icmp_sock, getpid(), ping_ctx.ttl, 1) != 0) {
+            exit(EXIT_FAILURE);
+        }
 
-	alarm(10);
+        sleep(2);
+    }
 }
 
 void pong() {
@@ -154,7 +162,7 @@ void pong() {
 	}
 }
 
-struct addrinfo* lookup_host (const char *host)
+struct addrinfo* ping_lookup(const char *bin_name, const char *host)
 {
 	struct addrinfo hints, *res, *result;
 	int errcode;
@@ -162,12 +170,13 @@ struct addrinfo* lookup_host (const char *host)
 	void *ptr;
 
 	memset (&hints, 0, sizeof (hints));
-	hints.ai_family = PF_UNSPEC;
+	hints.ai_family = PF_INET;
 	hints.ai_flags |= AI_CANONNAME;
 
 	errcode = getaddrinfo(host, NULL, &hints, &result);
+
 	if (errcode != 0) {
-		perror ("getaddrinfo");
+        fprintf(stderr, "%s: %s: %s\n", bin_name, host, gai_strerror(errcode));
 		exit(EXIT_FAILURE);
 	}
 
@@ -186,11 +195,9 @@ struct addrinfo* lookup_host (const char *host)
 		}
 		inet_ntop(res->ai_family, ptr, addrstr, 100);
 		printf("IPv%d address: %s %s\n", res->ai_family == PF_INET6 ? 6 : 4, addrstr, res->ai_canonname);
-
-		res = res->ai_next;
 	}
 	else {
-		printf("No host...\n");
+		fprintf(stderr, "Unknown error\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -200,16 +207,27 @@ struct addrinfo* lookup_host (const char *host)
 int main(int argc, char **argv) {
     initialize_context(argc, argv);
 
+    // Init signals
 	if (signal(SIGALRM, ping) == SIG_ERR) {
 		perror("signal alarm error");
 		exit(EXIT_FAILURE);
 	}
-
 	if (signal(SIGINT, interrupt) == SIG_ERR) {
 		perror("signal interrupt error");
 		exit(EXIT_FAILURE);
 	}
 
-	ping();
+	// Detached pinger
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, (void *(*)(void *))ping, NULL) != 0) {
+        perror("cannot create thread");
+        exit(EXIT_FAILURE);
+    }
+    if (pthread_detach(thread) != 0) {
+        perror("cannot detach thread");
+        exit(EXIT_FAILURE);
+    }
+
+    // Response listener
 	pong();
 }

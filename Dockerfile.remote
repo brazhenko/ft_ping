@@ -30,6 +30,7 @@ RUN apt-get update \
       vim \
       git \
       tcpdump \
+      showip \
   && apt-get clean
 
 RUN ( \
