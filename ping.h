@@ -60,8 +60,10 @@ struct s_ping_context {
     size_t      messages_sent;
     size_t      message_received;
 
+    struct timeval time_program_started;
     // In microseconds
     size_t      stats_count;
+    size_t      errors_count;
     uint64_t    min_ping_time;
     uint64_t    max_ping_time;
     uint64_t    acc_ping_time;
@@ -73,5 +75,14 @@ typedef struct s_ping_context ping_context_t;
 
 void    initialize_context(int argc, char **argv);
 void    initialize_signals();
+int send_echo_msg_v4(
+        int sock,
+        uint16_t id,
+        uint8_t ttl,
+        uint16_t icmp_seq_num,
+        size_t payload_size,
+        in_addr_t source_ip,
+        in_addr_t dest_ip);
+
 
 #endif

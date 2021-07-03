@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 struct addrinfo* ping_lookup(const char *bin_name, const char *host);
 ping_context_t ping_ctx = {};
@@ -21,7 +22,6 @@ static void dump_usage(const char *bin_name) {
         "  -a                 use audible ping\n"
         "  -c <count>         stop after <count> replies\n"
         "  -D                 print timestamps\n"
-        "  -f                 flood ping\n"
         "  -h                 print help and exit\n"
         "  -i <interval>      seconds between sending each packet\n"
         "  -n                 no dns name resolution\n"
@@ -67,6 +67,11 @@ static void set_default_args() {
     ping_ctx.messages_sent = 0;
     ping_ctx.message_received = 0;
     ping_ctx.min_ping_time = UINT64_MAX;
+
+    if (gettimeofday(&ping_ctx.time_program_started, NULL) != 0) {
+        perror("cannot get start time");
+        exit(EXIT_FAILURE);
+    }
 }
 
 void initialize_context(int argc, char **argv) {
@@ -148,7 +153,8 @@ void initialize_context(int argc, char **argv) {
             }
             exit(EXIT_FAILURE);
         default:
-            abort ();
+            fprintf(stderr, "This cannot happen\n");
+            exit(EXIT_FAILURE);
         }
 
     if (optind == argc) {
