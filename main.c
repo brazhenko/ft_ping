@@ -15,24 +15,8 @@
 
 // getpid
 // getuid
-// getaddrinfo
-// gettimeofday
-// inet_ntop		struct in_addr -> 192.168.0.1
-// inet_pton 		192.168.0.1 -> struct in_addr
-// setsockopt
-// recvmsg
-// sendto
-// socket
-
-/// USED:
-// exit
-// signal
-// alarm
-// *printf
-
 
 extern ping_context_t ping_ctx;
-
 
 static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t word_count) {
     uint32_t acc = 0;
@@ -51,7 +35,6 @@ int send_echo_msg_v4(
         uint16_t id,
         uint8_t ttl,
         uint16_t icmp_seq_num) {
-
     const size_t
             entire_msg_size = ip_hdr_size
             + icmp_hdr_size
@@ -227,8 +210,6 @@ void pong() {
     }
 }
 
-
-
 struct addrinfo* ping_lookup(const char *bin_name, const char *host)
 {
     struct addrinfo hints, *res, *result;
@@ -270,7 +251,6 @@ struct addrinfo* ping_lookup(const char *bin_name, const char *host)
 
     return res;
 }
-
 
 int main(int argc, char **argv) {
     initialize_context(argc, argv);

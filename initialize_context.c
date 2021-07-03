@@ -77,7 +77,6 @@ void initialize_context(int argc, char **argv) {
         case PING_QUIET:
         case PING_NO_DNS_NAME:
         case PING_AUDIBLE:
-        case PING_FLOOD:
         case PING_VERBOSE:
         case PING_TIMESTAMP_PREF:
             ping_ctx.flags[c] = true;

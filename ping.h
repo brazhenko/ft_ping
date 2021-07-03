@@ -18,11 +18,10 @@
 #include <pthread.h>
 #include <sys/time.h>
 
-# define PING_AVL_FLAGS         "vhs:fac:Dw:Vi:nqt:"
+# define PING_AVL_FLAGS         "vhs:ac:Dw:Vi:nqt:"
 # define PING_VERBOSE           'v'
 # define PING_HELP              'h'
 # define PING_PACKET_SZ         's'
-# define PING_FLOOD             'f'
 # define PING_AUDIBLE           'a'
 # define PING_RESPONSE_LIM      'c'
 # define PING_TIMESTAMP_PREF    'D'
