@@ -35,16 +35,15 @@ extern ping_context_t ping_ctx;
 
 
 static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t wordcount) {
-    uint32_t tmp = 0;
+    uint32_t acc = 0;
 
     for (int i = 0; i < wordcount; i++) {
-        int a = (words[i]);
-        tmp += a;
-        tmp += (tmp >> 16);
-        tmp &= UINT16_MAX;
+        acc += words[i];
+        acc += (acc >> 16);
+        acc &= UINT16_MAX;
     }
 
-    return (tmp ^ UINT16_MAX);
+    return (acc ^ UINT16_MAX);
 }
 
 int send_echo_msg_v4(
@@ -213,8 +212,10 @@ void pong() {
         if (ping_ctx.flags[PING_RESPONSE_LIM] && response_count == ping_ctx.response_count_limit) {
             raise(SIGINT);
         }
-
-        printf("%s\n", output);
+        
+        if (!ping_ctx.flags[PING_QUIET]) {
+            printf("%s\n", output);
+        }
     }
 }
 
