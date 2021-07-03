@@ -1,5 +1,4 @@
 #include "ping.h"
-
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -8,7 +7,6 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <netdb.h>
-
 
 struct addrinfo* ping_lookup(const char *bin_name, const char *host);
 ping_context_t ping_ctx = {};
@@ -40,7 +38,6 @@ static void dump_usage(const char *bin_name) {
 static void dump_version() {
     printf("%s\n", PING_VERSION_STR);
 }
-
 
 static void set_default_args() {
     // Clear up the structure
@@ -193,13 +190,5 @@ void initialize_context(int argc, char **argv) {
     for(p = info; p != NULL; p = p->ai_next) {
         printf("hostname: %s\n", p->ai_canonname);
     }
-
-    // Dump argv data
-    for (int i = 0; i < 256; i++) {
-        if (ping_ctx.flags[i]) {
-            printf("%c", i);
-        }
-    }
-    printf("\n");
 
 }

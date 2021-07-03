@@ -5,6 +5,19 @@
 # include <stddef.h>
 # include <limits.h>
 
+#include <unistd.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <signal.h>
+#include <arpa/inet.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <netinet/ip_icmp.h>
+#include "ping.h"
+#include <byteswap.h>
+#include <pthread.h>
+#include <sys/time.h>
+
 # define PING_AVL_FLAGS         "vhs:fac:Dw:Vi:nqt:"
 # define PING_VERBOSE           'v'
 # define PING_HELP              'h'
@@ -32,6 +45,9 @@
 # define PING_LEFETIME_SEC_MAX      1000000
 # define PING_IPV4_DEFAULT_TTL_PATH "/proc/sys/net/ipv4/ip_default_ttl"
 # define PING_VERSION_STR           "ft_ping v0.0.1"
+
+static const size_t         ip_hdr_size = sizeof (struct iphdr); // Supposed to be 20
+static const size_t         icmp_hdr_size = sizeof (struct icmphdr); // Supposed to be 8
 
 struct s_ping_context {
     bool        flags[256];

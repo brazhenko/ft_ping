@@ -1,27 +1,10 @@
 #include "ping.h"
-
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <ctype.h>
-#include <fcntl.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <signal.h>
-#include <arpa/inet.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <netinet/ip_icmp.h>
-#include "ping.h"
-#include <byteswap.h>
-#include <pthread.h>
-
 
 extern ping_context_t ping_ctx;
 
