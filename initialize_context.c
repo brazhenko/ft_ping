@@ -161,7 +161,6 @@ void initialize_context(int argc, char **argv) {
         perror("cannot create socket");
         exit(EXIT_FAILURE);
     }
-    printf("socket: %d\n", icmp_sock);
 
     if (setsockopt(icmp_sock, IPPROTO_IP, IP_HDRINCL, (int[1]){1}, sizeof(int)) == -1) {
         perror("cannot set sock option");

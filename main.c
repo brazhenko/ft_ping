@@ -34,10 +34,10 @@
 extern ping_context_t ping_ctx;
 
 
-static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t wordcount) {
+static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t word_count) {
     uint32_t acc = 0;
 
-    for (int i = 0; i < wordcount; i++) {
+    for (int i = 0; i < word_count; i++) {
         acc += words[i];
         acc += (acc >> 16);
         acc &= UINT16_MAX;
@@ -98,7 +98,6 @@ int send_echo_msg_v4(
         memcpy(payload_ptr, &current_time, sizeof current_time);
     }
 
-
     // Calculating ICMP checksum after filling payload
     icmp_header->icmp_cksum = 0;
     icmp_header->icmp_cksum = ipv4_icmp_checksum((uint16_t *)icmp_header,
@@ -124,12 +123,10 @@ int send_echo_msg_v4(
 
 void ping() {
     int seq_number = 1;
-
     while (true) {
         if (send_echo_msg_v4(ping_ctx.icmp_sock, getpid(), ping_ctx.ttl, seq_number) != 0) {
             exit(EXIT_FAILURE);
         }
-
         seq_number++;
         sleep(ping_ctx.interval_between_echoes);
     }
@@ -137,7 +134,7 @@ void ping() {
 
 void pong() {
     char            buffer[512];
-    ssize_t            ret;
+    ssize_t         ret;
     int             response_count = 0;
     struct timeval  current_time, send_time;
     char            output[1024];
@@ -182,7 +179,7 @@ void pong() {
         memset(output, 0, sizeof output);
 
         if (ping_ctx.flags[PING_TIMESTAMP_PREF]) {
-            sprintf(output, "[%zu.%06zu] ", current_time.tv_sec, current_time.tv_usec);
+            sprintf(output + strlen(output), "[%zu.%06zu] ", current_time.tv_sec, current_time.tv_usec);
         }
 
         // Parse response msg
@@ -190,7 +187,18 @@ void pong() {
         struct icmp *icmp_hdr = (struct icmp*)(&buffer[0] + ip_hdr_size);
 
         sprintf(output + strlen(output), "%ld bytes ", ntohs(ip_hdr->ip_len) - sizeof (struct iphdr));
-        sprintf(output + strlen(output), "from %s (%s): ", "YA.RU", "87.250.250.242"); // TODO сделать
+        char ip_buffer[64] = {0};
+        inet_ntop(AF_INET, &((struct sockaddr_in *) ping_ctx.dest_addr_info->ai_addr)->sin_addr, ip_buffer, sizeof ip_buffer);
+
+        if (ping_ctx.flags[PING_NO_DNS_NAME]) {
+            // Print out without DNS name
+            sprintf(output + strlen(output), "from %s: ", ip_buffer);
+        }
+        else {
+            sprintf(output + strlen(output), "from %s (%s): ", ping_ctx.dest_addr_info->ai_canonname, ip_buffer);
+        }
+
+
         sprintf(output + strlen(output), "icmp_seq=%d ", ntohs(icmp_hdr->icmp_seq));
         sprintf(output + strlen(output), "ttl=%d ", ip_hdr->ip_ttl);
 
@@ -212,7 +220,7 @@ void pong() {
         if (ping_ctx.flags[PING_RESPONSE_LIM] && response_count == ping_ctx.response_count_limit) {
             raise(SIGINT);
         }
-        
+
         if (!ping_ctx.flags[PING_QUIET]) {
             printf("%s\n", output);
         }
