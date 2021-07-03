@@ -4,19 +4,7 @@
 # include <stdbool.h>
 # include <stddef.h>
 # include <limits.h>
-
-#include <unistd.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <signal.h>
-#include <arpa/inet.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <netinet/ip_icmp.h>
-#include "ping.h"
-#include <byteswap.h>
-#include <pthread.h>
-#include <sys/time.h>
+# include <netinet/ip_icmp.h>
 
 # define PING_AVL_FLAGS         "vhs:ac:Dw:Vi:nqt:"
 # define PING_VERBOSE           'v'

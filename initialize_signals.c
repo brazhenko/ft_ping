@@ -1,10 +1,8 @@
 #include "ping.h"
 #include <stdio.h>
-#include <unistd.h>
 #include <stdlib.h>
-#include <sys/socket.h>
-#include <netdb.h>
 #include <signal.h>
+#include <unistd.h>
 
 extern ping_context_t ping_ctx;
 

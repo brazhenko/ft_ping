@@ -1,12 +1,11 @@
 #include "ping.h"
 #include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <string.h>
-#include <sys/socket.h>
+#include <stdlib.h>
 #include <netdb.h>
+#include <unistd.h>
 
 struct addrinfo* ping_lookup(const char *bin_name, const char *host);
 ping_context_t ping_ctx = {};
