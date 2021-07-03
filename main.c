@@ -1,15 +1,11 @@
+#include "ping.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <string.h>
-#include <sys/socket.h>
 #include <netdb.h>
 #include <signal.h>
 #include <arpa/inet.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <netinet/ip_icmp.h>
-#include "ping.h"
-#include <byteswap.h>
 #include <pthread.h>
 #include <sys/time.h>
 
@@ -63,8 +59,8 @@ int send_echo_msg_v4(
     icmp_header->icmp_type = ICMP_ECHO;
     icmp_header->icmp_code = 0;
     icmp_header->icmp_cksum = 0;
-    icmp_header->icmp_id = __bswap_16(id);
-    icmp_header->icmp_seq = __bswap_16(icmp_seq_num);
+    icmp_header->icmp_id = htons(id);
+    icmp_header->icmp_seq = htons(icmp_seq_num);
 
     // Filling ICMP payload with random data
     char *payload_ptr = (char *)(message + ip_hdr_size + icmp_hdr_size);
@@ -154,7 +150,6 @@ void pong() {
             perror("cannot get time");
             exit(EXIT_FAILURE);
         }
-
 
         // Clear output print buffer...
         memset(output, 0, sizeof output);
