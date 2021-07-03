@@ -5,7 +5,7 @@
 # include <stddef.h>
 # include <limits.h>
 
-# define PING_AVL_FLAGS	        "vhs:fac:Dw:Vi:nqt:"
+# define PING_AVL_FLAGS         "vhs:fac:Dw:Vi:nqt:"
 # define PING_VERBOSE           'v'
 # define PING_HELP              'h'
 # define PING_PACKET_SZ         's'
@@ -34,16 +34,16 @@
 # define PING_VERSION_STR           "ft_ping v0.0.1"
 
 struct s_ping_context {
-	bool        flags[256];
-	const char  *dest;
+    bool        flags[256];
+    const char  *dest;
     int         icmp_sock;
     struct addrinfo*    dest_addr_info;
     struct addrinfo*    src_addr_info;
-	int         payload_size;
-	size_t      response_count_limit;
-	size_t      seconds_to_work;
-	size_t      interval_between_echoes;
-	int         ttl;
+    int         payload_size;
+    size_t      response_count_limit;
+    size_t      seconds_to_work;
+    size_t      interval_between_echoes;
+    int         ttl;
 };
 
 typedef struct s_ping_context ping_context_t;

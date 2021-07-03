@@ -35,16 +35,16 @@ extern ping_context_t ping_ctx;
 
 
 static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t wordcount) {
-	uint32_t tmp = 0;
+    uint32_t tmp = 0;
 
-	for (int i = 0; i < wordcount; i++) {
-		int a = (words[i]);
-		tmp += a;
-		tmp += (tmp >> 16);
-		tmp &= UINT16_MAX;
-	}
+    for (int i = 0; i < wordcount; i++) {
+        int a = (words[i]);
+        tmp += a;
+        tmp += (tmp >> 16);
+        tmp &= UINT16_MAX;
+    }
 
-	return (tmp ^ UINT16_MAX);
+    return (tmp ^ UINT16_MAX);
 }
 
 int send_echo_msg_v4(
@@ -126,41 +126,41 @@ void ping() {
 }
 
 void pong() {
-	char			buffer[512];
-	ssize_t			ret;
-	int             response_count = 0;
+    char            buffer[512];
+    ssize_t            ret;
+    int             response_count = 0;
     struct timeval  current_time;
     char            output[1024];
 
-	struct iovec	io = {
-		.iov_base = buffer,
-		.iov_len = sizeof buffer
-	};
-	struct msghdr	msg = {
-		.msg_name = NULL,
-		.msg_namelen = 0,
-		.msg_iov = &io,
-		.msg_iovlen = 1,
-		.msg_control = buffer,
-		.msg_controllen = sizeof(buffer),
-		.msg_flags = 0
-	};
+    struct iovec    io = {
+        .iov_base = buffer,
+        .iov_len = sizeof buffer
+    };
+    struct msghdr    msg = {
+        .msg_name = NULL,
+        .msg_namelen = 0,
+        .msg_iov = &io,
+        .msg_iovlen = 1,
+        .msg_control = buffer,
+        .msg_controllen = sizeof(buffer),
+        .msg_flags = 0
+    };
 
-	while (true) {
-		// reading answer...
-		ret = recvmsg(ping_ctx.icmp_sock, &msg, 0);
+    while (true) {
+        // reading answer...
+        ret = recvmsg(ping_ctx.icmp_sock, &msg, 0);
 
-		if (ret < 0) {
-			perror("Holy shit!");
-			exit(EXIT_FAILURE);
-		}
-		else if (ret == 0) {
-			perror("Connection closed");
-		}
-		else {
-			printf("Something arrived!\n");
-		}
-		// Clear output print buffer...
+        if (ret < 0) {
+            perror("Holy shit!");
+            exit(EXIT_FAILURE);
+        }
+        else if (ret == 0) {
+            perror("Connection closed");
+        }
+        else {
+            printf("Something arrived!\n");
+        }
+        // Clear output print buffer...
         memset(output, 0, sizeof output);
 
         if (ping_ctx.flags[PING_TIMESTAMP_PREF]) {
@@ -173,59 +173,61 @@ void pong() {
 
 
 
-		if (ping_ctx.flags[PING_AUDIBLE]) {
+        if (ping_ctx.flags[PING_AUDIBLE]) {
             printf("%c", '\a');
             fflush(stdout);
-		}
+        }
         response_count++;
         if (ping_ctx.flags[PING_RESPONSE_LIM] && response_count == ping_ctx.response_count_limit) {
             raise(SIGINT);
         }
 
         printf("%s\n", output);
-	}
+    }
 }
+
+
 
 struct addrinfo* ping_lookup(const char *bin_name, const char *host)
 {
-	struct addrinfo hints, *res, *result;
-	int errcode;
-	char addrstr[100];
-	void *ptr;
+    struct addrinfo hints, *res, *result;
+    int errcode;
+    char addrstr[100];
+    void *ptr;
 
-	memset (&hints, 0, sizeof (hints));
-	hints.ai_family = PF_INET;
-	hints.ai_flags |= AI_CANONNAME;
+    memset (&hints, 0, sizeof (hints));
+    hints.ai_family = PF_INET;
+    hints.ai_flags |= AI_CANONNAME;
 
-	errcode = getaddrinfo(host, NULL, &hints, &result);
+    errcode = getaddrinfo(host, NULL, &hints, &result);
 
-	if (errcode != 0) {
+    if (errcode != 0) {
         fprintf(stderr, "%s: %s: %s\n", bin_name, host, gai_strerror(errcode));
-		exit(EXIT_FAILURE);
-	}
+        exit(EXIT_FAILURE);
+    }
 
-	res = result;
+    res = result;
 
-	printf ("Host: %s\n", host);
-	if (res) {
-		switch (res->ai_family)
-		{
-			case AF_INET:
-				ptr = &((struct sockaddr_in *) res->ai_addr)->sin_addr;
-				break;
-			case AF_INET6:
-				ptr = &((struct sockaddr_in6 *) res->ai_addr)->sin6_addr;
-				break;
-		}
-		inet_ntop(res->ai_family, ptr, addrstr, 100);
-		printf("IPv%d address: %s %s\n", res->ai_family == PF_INET6 ? 6 : 4, addrstr, res->ai_canonname);
-	}
-	else {
-		fprintf(stderr, "Unknown error\n");
-		exit(EXIT_FAILURE);
-	}
+    printf ("Host: %s\n", host);
+    if (res) {
+        switch (res->ai_family)
+        {
+            case AF_INET:
+                ptr = &((struct sockaddr_in *) res->ai_addr)->sin_addr;
+                break;
+            case AF_INET6:
+                ptr = &((struct sockaddr_in6 *) res->ai_addr)->sin6_addr;
+                break;
+        }
+        inet_ntop(res->ai_family, ptr, addrstr, 100);
+        printf("IPv%d address: %s %s\n", res->ai_family == PF_INET6 ? 6 : 4, addrstr, res->ai_canonname);
+    }
+    else {
+        fprintf(stderr, "Unknown error\n");
+        exit(EXIT_FAILURE);
+    }
 
-	return res;
+    return res;
 }
 
 
@@ -233,7 +235,7 @@ int main(int argc, char **argv) {
     initialize_context(argc, argv);
     initialize_signals();
 
-	// Detached pinger
+    // Detached pinger
     pthread_t thread;
     if (pthread_create(&thread, NULL, (void *(*)(void *))ping, NULL) != 0) {
         perror("cannot create thread");
@@ -245,5 +247,25 @@ int main(int argc, char **argv) {
     }
 
     // Response listener
-	pong();
+    pong();
 }
+
+//void pr_iph(struct iphdr *ip)
+//{
+//    int hlen;
+//    u_char *cp;
+//
+//    hlen = ip->ihl << 2;
+//    cp = (u_char *)ip + 20;        /* point to options */
+//
+//    printf("Vr HL TOS  Len   ID Flg  off TTL Pro  cks      Src      Dst Data\n");
+//    printf(" %1x  %1x  %02x %04x %04x",
+//            ip->version, ip->ihl, ip->tos, ip->tot_len, ip->id);
+//    printf("   %1x %04x", ((ip->frag_off) & 0xe000) >> 13,
+//            (ip->frag_off) & 0x1fff);
+//    printf("  %02x  %02x %04x", ip->ttl, ip->protocol, ip->check);
+//    printf(" %s ", inet_ntoa(*(struct in_addr *)&ip->saddr));
+//    printf(" %s ", inet_ntoa(*(struct in_addr *)&ip->daddr));
+//    printf("\n");
+//    pr_options(cp, hlen);
+//}
