@@ -62,6 +62,11 @@ static void set_default_args() {
 
     // Set default interval between echoes
     ping_ctx.interval_between_echoes = 1;
+
+    // Stats
+    ping_ctx.messages_sent = 0;
+    ping_ctx.message_received = 0;
+    ping_ctx.min_ping_time = UINT64_MAX;
 }
 
 void initialize_context(int argc, char **argv) {

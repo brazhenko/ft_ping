@@ -105,12 +105,11 @@ int send_echo_msg_v4(
 }
 
 void ping() {
-    int seq_number = 1;
     while (true) {
-        if (send_echo_msg_v4(ping_ctx.icmp_sock, getpid(), ping_ctx.ttl, seq_number) != 0) {
+        if (send_echo_msg_v4(ping_ctx.icmp_sock, getpid(), ping_ctx.ttl, ping_ctx.messages_sent) != 0) {
             exit(EXIT_FAILURE);
         }
-        seq_number++;
+        ping_ctx.messages_sent++;
         sleep(ping_ctx.interval_between_echoes);
     }
 }
@@ -118,7 +117,6 @@ void ping() {
 void pong() {
     char            buffer[512];
     ssize_t         ret;
-    int             response_count = 0;
     struct timeval  current_time, send_time;
     char            output[1024];
 
@@ -189,18 +187,24 @@ void pong() {
             // There is timestamp? Using it!
             char *icmp_payload_ptr = buffer + ip_hdr_size + icmp_hdr_size;
             memcpy(&send_time, icmp_payload_ptr, sizeof send_time);
-            const uint64_t mcrsec_delta = (current_time.tv_sec - send_time.tv_sec) * 100000 +
+            const uint64_t trip_time = (current_time.tv_sec - send_time.tv_sec) * 100000 +
                     (current_time.tv_usec - send_time.tv_usec);
-            sprintf(output + strlen(output), "time=%ld.%ld ms",
-                    mcrsec_delta / 1000, mcrsec_delta % 1000 / 10);
+            ping_ctx.min_ping_time = min(ping_ctx.min_ping_time, trip_time);
+            ping_ctx.max_ping_time = max(ping_ctx.max_ping_time, trip_time);
+            ping_ctx.acc_ping_time += trip_time;
+            ping_ctx.acc_ping_time2 += (trip_time * trip_time);
+
+            ping_ctx.stats_count++;
+            sprintf(output + strlen(output), "time=%ld.%02ld ms",
+                    trip_time / 1000, trip_time % 1000 / 10);
         }
 
         if (ping_ctx.flags[PING_AUDIBLE]) {
             printf("%c", '\a');
             fflush(stdout);
         }
-        response_count++;
-        if (ping_ctx.flags[PING_RESPONSE_LIM] && response_count == ping_ctx.response_count_limit) {
+        ping_ctx.message_received++;
+        if (ping_ctx.flags[PING_RESPONSE_LIM] && ping_ctx.message_received == ping_ctx.response_count_limit) {
             raise(SIGINT);
         }
 

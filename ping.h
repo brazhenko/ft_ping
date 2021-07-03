@@ -33,6 +33,16 @@
 # define PING_IPV4_DEFAULT_TTL_PATH "/proc/sys/net/ipv4/ip_default_ttl"
 # define PING_VERSION_STR           "ft_ping v0.0.1"
 
+#define max(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+
+#define min(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a < _b ? _a : _b; })
+
 static const size_t         ip_hdr_size = sizeof (struct iphdr); // Supposed to be 20
 static const size_t         icmp_hdr_size = sizeof (struct icmphdr); // Supposed to be 8
 
@@ -47,7 +57,17 @@ struct s_ping_context {
     size_t      seconds_to_work;
     size_t      interval_between_echoes;
     int         ttl;
+    size_t      messages_sent;
+    size_t      message_received;
+
+    // In microseconds
+    size_t      stats_count;
+    uint64_t    min_ping_time;
+    uint64_t    max_ping_time;
+    uint64_t    acc_ping_time;
+    uint64_t    acc_ping_time2;
 };
+
 
 typedef struct s_ping_context ping_context_t;
 
