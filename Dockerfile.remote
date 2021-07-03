@@ -31,6 +31,7 @@ RUN apt-get update \
       git \
       tcpdump \
       showip \
+      net-tools \
   && apt-get clean
 
 RUN ( \
