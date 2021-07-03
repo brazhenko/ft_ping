@@ -42,3 +42,7 @@ tcpdump -x "ip[2:2] == 84"
 * http://www.netpatch.ru/windows-files/pingscan/raw_ping.c.html
 
 * http://www.n-cg.net/hec.htm
+
+* https://habr.com/ru/post/352300/
+
+* https://masandilov.ru/network/guide_to_network_programming5
