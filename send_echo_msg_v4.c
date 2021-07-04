@@ -1,21 +1,10 @@
 #include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include "ping.h"
 #include <netdb.h>
 
-static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t word_count) {
-    uint32_t acc = 0;
-
-    for (int i = 0; i < word_count; i++) {
-        acc += words[i];
-        acc += (acc >> 16);
-        acc &= UINT16_MAX;
-    }
-
-    return (acc ^ UINT16_MAX);
-}
+static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t word_count);
 
 /*
  * Function: send_echo_msg_v4
@@ -116,4 +105,16 @@ int send_echo_msg_v4(
     if (ret < 0) return 1;
 
     return 0;
+}
+
+static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t word_count) {
+    uint32_t acc = 0;
+
+    for (int i = 0; i < word_count; i++) {
+        acc += words[i];
+        acc += (acc >> 16);
+        acc &= UINT16_MAX;
+    }
+
+    return (acc ^ UINT16_MAX);
 }
