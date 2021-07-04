@@ -9,7 +9,6 @@
 #include <pthread.h>
 #include <sys/time.h>
 
-// getpid
 // getuid
 
 extern ping_context_t ping_ctx;
@@ -38,6 +37,7 @@ void ping() {
                 ((struct sockaddr_in *)ping_ctx.src_addr_info->ai_addr)->sin_addr.s_addr,
                 ((struct sockaddr_in *)ping_ctx.dest_addr_info->ai_addr)->sin_addr.s_addr)
             != 0) {
+
             perror("cannot send echo");
             exit(EXIT_FAILURE);
         }
@@ -67,7 +67,6 @@ void pong() {
     };
 
     while (true) {
-        // reading answer...
         ret = recvmsg(ping_ctx.icmp_sock, &msg, 0);
 
         if (ret < 0) {
@@ -77,9 +76,12 @@ void pong() {
         else if (ret == 0) {
             perror("Connection closed");
         }
-//        if (ret < MIN_ICMP_MSG_SIZE) {
-//              govno1;
-//        }
+        if (ret < ip_hdr_size + icmp_hdr_size) {
+            fprintf(stderr,
+                    "Something impossible happened,"
+                    "packet is too small, ignoring\n");
+            continue;
+        }
 
         // Get current time for different needs
         if (gettimeofday(&current_time, NULL) != 0) {
@@ -96,79 +98,123 @@ void pong() {
 
         // Parse response msg
         struct ip* ip_hdr = (struct ip*)buffer;
-        struct icmp *icmp_hdr = (struct icmp*)(&buffer[0] + ip_hdr_size);
-        print_iphdr((struct iphdr*)ip_hdr);
+        struct icmp *icmp_hdr = (struct icmp*)(buffer + ip_hdr_size);
 
         in_addr_t sender_ip = ip_hdr->ip_src.s_addr;
 
-        sprintf(output + strlen(output), "%ld bytes ", ntohs(ip_hdr->ip_len) - sizeof (struct iphdr));
-        char ip_buffer[64] = {0};
-        inet_ntop(AF_INET, &ip_hdr->ip_dst.s_addr, ip_buffer, sizeof ip_buffer);
-        printf("dest computor: %s\n", ip_buffer);
+        if (icmp_hdr->icmp_type == ICMP_ECHOREPLY) {
+            // Good echo-reply received
+            sprintf(output + strlen(output), "%ld bytes ", ntohs(ip_hdr->ip_len) - sizeof (struct iphdr));
+            char ip_buffer[64] = {0};
+            inet_ntop(AF_INET, &ip_hdr->ip_dst.s_addr, ip_buffer, sizeof ip_buffer);
+//        printf("dest computor: %s\n", ip_buffer);
 
-        inet_ntop(AF_INET, &sender_ip, ip_buffer, sizeof ip_buffer);
-        printf("source computor: %s\n", ip_buffer);
+            inet_ntop(AF_INET, &sender_ip, ip_buffer, sizeof ip_buffer);
+            printf("source computor: %s\n", ip_buffer);
+
+            printf("echo type: %d\n", icmp_hdr->icmp_type);
+
+            if (ping_ctx.flags[PING_NO_DNS_NAME]) {
+                // Print out without DNS name
+                sprintf(output + strlen(output), "from %s: ", ip_buffer);
+            }
+            else {
+                struct addrinfo hints, *res, *result;
+                int errcode;
+                char addrstr[100];
+                void *ptr;
+
+                memset (&hints, 0, sizeof (hints));
+                hints.ai_family = PF_INET;
+                hints.ai_flags |= AI_CANONNAME;
 
 
-
-        if (ping_ctx.flags[PING_NO_DNS_NAME]) {
-            // Print out without DNS name
-            sprintf(output + strlen(output), "from %s: ", ip_buffer);
-        }
-        else {
-            struct addrinfo hints, *res, *result;
-            int errcode;
-            char addrstr[100];
-            void *ptr;
-
-            memset (&hints, 0, sizeof (hints));
-            hints.ai_family = PF_INET;
-            hints.ai_flags |= AI_CANONNAME;
+                errcode = getaddrinfo(ip_buffer, NULL, &hints, &result);
+                if (errcode != 0) {
+                    fprintf(stderr, "%s: %s\n", ip_buffer, gai_strerror(errcode));
+                    exit(EXIT_FAILURE);
+                }
 
 
-            errcode = getaddrinfo(ip_buffer, NULL, &hints, &result);
-            if (errcode != 0) {
-                fprintf(stderr, "%s: %s\n", ip_buffer, gai_strerror(errcode));
-                exit(EXIT_FAILURE);
+                sprintf(output + strlen(output), "from %s (%s): ", result->ai_canonname, ip_buffer);
+
+                freeaddrinfo(result);
             }
 
 
-            sprintf(output + strlen(output), "from %s (%s): ", result->ai_canonname, ip_buffer);
+            sprintf(output + strlen(output), "icmp_seq=%d ", ntohs(icmp_hdr->icmp_seq));
+            sprintf(output + strlen(output), "ttl=%d ", ip_hdr->ip_ttl);
 
-            freeaddrinfo(result);
+            if (ret - ip_hdr_size - icmp_hdr_size >= sizeof (struct timeval)) {
+                // There is timestamp? Using it!
+                char *icmp_payload_ptr = buffer + ip_hdr_size + icmp_hdr_size;
+                memcpy(&send_time, icmp_payload_ptr, sizeof send_time);
+                const uint64_t trip_time = (current_time.tv_sec - send_time.tv_sec) * 100000 +
+                        (current_time.tv_usec - send_time.tv_usec);
+                ping_ctx.min_ping_time = min(ping_ctx.min_ping_time, trip_time);
+                ping_ctx.max_ping_time = max(ping_ctx.max_ping_time, trip_time);
+                ping_ctx.acc_ping_time += trip_time;
+                ping_ctx.acc_ping_time2 += (trip_time * trip_time);
+
+                ping_ctx.stats_count++;
+                sprintf(output + strlen(output), "time=%ld.%02ld ms",
+                        trip_time / 1000, trip_time % 1000 / 10);
+            }
+
+            if (ping_ctx.flags[PING_AUDIBLE]) {
+                printf("%c", '\a');
+                fflush(stdout);
+            }
+            ping_ctx.message_received++;
+            if (ping_ctx.flags[PING_RESPONSE_LIM] && ping_ctx.message_received == ping_ctx.response_count_limit) {
+                raise(SIGINT);
+            }
         }
+        else {
+            char ip_buffer[64] = {0};
+            inet_ntop(AF_INET, &sender_ip, ip_buffer, sizeof ip_buffer);
+
+            if (ping_ctx.flags[PING_NO_DNS_NAME]) {
+                // Print out without DNS name
+                sprintf(output + strlen(output), "From %s ", ip_buffer);
+            }
+            else {
+                struct addrinfo hints, *res, *result;
+                int errcode;
+                char addrstr[100];
+                void *ptr;
+
+                memset (&hints, 0, sizeof (hints));
+                hints.ai_family = PF_INET;
+                hints.ai_flags |= AI_CANONNAME;
 
 
-        sprintf(output + strlen(output), "icmp_seq=%d ", ntohs(icmp_hdr->icmp_seq));
-        sprintf(output + strlen(output), "ttl=%d ", ip_hdr->ip_ttl);
+                errcode = getaddrinfo(ip_buffer, NULL, &hints, &result);
+                if (errcode != 0) {
+                    fprintf(stderr, "%s: %s\n", ip_buffer, gai_strerror(errcode));
+                    exit(EXIT_FAILURE);
+                }
+                sprintf(output + strlen(output), "From %s (%s) ", result->ai_canonname, ip_buffer);
+                freeaddrinfo(result);
+            }
 
-        if (ret - ip_hdr_size - icmp_hdr_size >= sizeof (struct timeval)) {
-            // There is timestamp? Using it!
-            char *icmp_payload_ptr = buffer + ip_hdr_size + icmp_hdr_size;
-            memcpy(&send_time, icmp_payload_ptr, sizeof send_time);
-            const uint64_t trip_time = (current_time.tv_sec - send_time.tv_sec) * 100000 +
-                    (current_time.tv_usec - send_time.tv_usec);
-            ping_ctx.min_ping_time = min(ping_ctx.min_ping_time, trip_time);
-            ping_ctx.max_ping_time = max(ping_ctx.max_ping_time, trip_time);
-            ping_ctx.acc_ping_time += trip_time;
-            ping_ctx.acc_ping_time2 += (trip_time * trip_time);
-
-            ping_ctx.stats_count++;
-            sprintf(output + strlen(output), "time=%ld.%02ld ms",
-                    trip_time / 1000, trip_time % 1000 / 10);
+            sprintf(output + strlen(output), "icmp_seq=%d ",
+                    ntohs(*(uint16_t*)&buffer[ret - 2]) /* on error icmp_seq number is in the last 2 bytes of payload */);
+            if (icmp_hdr->icmp_type == ICMP_TIME_EXCEEDED) {
+                sprintf(output + strlen(output), "Time to live exceeded");
+            }
+            else if (icmp_hdr->icmp_type == ICMP_DEST_UNREACH) {
+                sprintf(output + strlen(output), "Destination Unreachable");
+            }
+            else {
+                sprintf(output + strlen(output), "Unknown ICMP return code: %x", icmp_hdr->icmp_seq);
+            }
         }
-
-        if (ping_ctx.flags[PING_AUDIBLE]) {
-            printf("%c", '\a');
-            fflush(stdout);
-        }
-        ping_ctx.message_received++;
-        if (ping_ctx.flags[PING_RESPONSE_LIM] && ping_ctx.message_received == ping_ctx.response_count_limit) {
-            raise(SIGINT);
-        }
-
         if (!ping_ctx.flags[PING_QUIET]) {
             printf("%s\n", output);
+        }
+        if (ping_ctx.flags[PING_VERBOSE] && icmp_hdr->icmp_type != ICMP_ECHOREPLY) {
+            print_iphdr((struct iphdr*)ip_hdr);
         }
     }
 }

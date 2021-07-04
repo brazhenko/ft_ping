@@ -1,7 +1,7 @@
 #include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
-#include "ping.h"
+# include <netinet/ip_icmp.h>
 #include <netdb.h>
 
 static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t word_count);
@@ -39,6 +39,9 @@ int send_echo_msg_v4(
         in_addr_t source_ip,
         in_addr_t dest_ip
         ) {
+    static const size_t ip_hdr_size = sizeof (struct iphdr) /* =20 */
+        , icmp_hdr_size = sizeof (struct icmphdr); /* =8 */
+
     const size_t entire_msg_size
         = ip_hdr_size + icmp_hdr_size + payload_size;
 

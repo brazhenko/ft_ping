@@ -195,8 +195,8 @@ void initialize_context(int argc, char **argv) {
     }
     ping_ctx.src_addr_info = info;
 
-    for(p = info; p != NULL; p = p->ai_next) {
-        printf("hostname: %s\n", p->ai_canonname);
-    }
+//    for(p = info; p != NULL; p = p->ai_next) {
+//        printf("hostname: %s\n", p->ai_canonname);
+//    }
 
 }
