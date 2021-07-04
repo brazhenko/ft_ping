@@ -14,7 +14,18 @@
 
 extern ping_context_t ping_ctx;
 
-
+void print_iphdr(struct iphdr *ip)
+{
+    printf("Vr HL TOS  Len   ID Flg  off TTL Pro  cks      Src          Dst\n");
+    printf(" %1x  %1x  %02x %04x %04x",
+            ip->version, ip->ihl, ip->tos, ip->tot_len, ip->id);
+    printf("   %1x %04x", ((ip->frag_off) & 0xe000) >> 13,
+            (ip->frag_off) & 0x1fff);
+    printf("  %02x  %02x %04x", ip->ttl, ip->protocol, ip->check);
+    printf(" %s ", inet_ntoa(*(struct in_addr *)&ip->saddr));
+    printf(" %s ", inet_ntoa(*(struct in_addr *)&ip->daddr));
+    printf("\n");
+}
 
 void ping() {
     while (true) {
@@ -22,10 +33,12 @@ void ping() {
                 ping_ctx.icmp_sock,
                 getpid(),
                 ping_ctx.ttl,
-                ping_ctx.messages_sent,
+                ping_ctx.messages_sent + 1,
                 ping_ctx.payload_size,
                 ((struct sockaddr_in *)ping_ctx.src_addr_info->ai_addr)->sin_addr.s_addr,
-                ((struct sockaddr_in *)ping_ctx.dest_addr_info->ai_addr)->sin_addr.s_addr) != 0) {
+                ((struct sockaddr_in *)ping_ctx.dest_addr_info->ai_addr)->sin_addr.s_addr)
+            != 0) {
+            perror("cannot send echo");
             exit(EXIT_FAILURE);
         }
         ping_ctx.messages_sent++;
@@ -84,17 +97,45 @@ void pong() {
         // Parse response msg
         struct ip* ip_hdr = (struct ip*)buffer;
         struct icmp *icmp_hdr = (struct icmp*)(&buffer[0] + ip_hdr_size);
+        print_iphdr((struct iphdr*)ip_hdr);
+
+        in_addr_t sender_ip = ip_hdr->ip_src.s_addr;
 
         sprintf(output + strlen(output), "%ld bytes ", ntohs(ip_hdr->ip_len) - sizeof (struct iphdr));
         char ip_buffer[64] = {0};
-        inet_ntop(AF_INET, &((struct sockaddr_in *) ping_ctx.dest_addr_info->ai_addr)->sin_addr, ip_buffer, sizeof ip_buffer);
+        inet_ntop(AF_INET, &ip_hdr->ip_dst.s_addr, ip_buffer, sizeof ip_buffer);
+        printf("dest computor: %s\n", ip_buffer);
+
+        inet_ntop(AF_INET, &sender_ip, ip_buffer, sizeof ip_buffer);
+        printf("source computor: %s\n", ip_buffer);
+
+
 
         if (ping_ctx.flags[PING_NO_DNS_NAME]) {
             // Print out without DNS name
             sprintf(output + strlen(output), "from %s: ", ip_buffer);
         }
         else {
-            sprintf(output + strlen(output), "from %s (%s): ", ping_ctx.dest_addr_info->ai_canonname, ip_buffer);
+            struct addrinfo hints, *res, *result;
+            int errcode;
+            char addrstr[100];
+            void *ptr;
+
+            memset (&hints, 0, sizeof (hints));
+            hints.ai_family = PF_INET;
+            hints.ai_flags |= AI_CANONNAME;
+
+
+            errcode = getaddrinfo(ip_buffer, NULL, &hints, &result);
+            if (errcode != 0) {
+                fprintf(stderr, "%s: %s\n", ip_buffer, gai_strerror(errcode));
+                exit(EXIT_FAILURE);
+            }
+
+
+            sprintf(output + strlen(output), "from %s (%s): ", result->ai_canonname, ip_buffer);
+
+            freeaddrinfo(result);
         }
 
 
@@ -142,9 +183,7 @@ struct addrinfo* ping_lookup(const char *bin_name, const char *host)
     memset (&hints, 0, sizeof (hints));
     hints.ai_family = PF_INET;
     hints.ai_flags |= AI_CANONNAME;
-
     errcode = getaddrinfo(host, NULL, &hints, &result);
-
     if (errcode != 0) {
         fprintf(stderr, "%s: %s: %s\n", bin_name, host, gai_strerror(errcode));
         exit(EXIT_FAILURE);
@@ -193,22 +232,4 @@ int main(int argc, char **argv) {
     pong();
 }
 
-//void pr_iph(struct iphdr *ip)
-//{
-//    int hlen;
-//    u_char *cp;
-//
-//    hlen = ip->ihl << 2;
-//    cp = (u_char *)ip + 20;        /* point to options */
-//
-//    printf("Vr HL TOS  Len   ID Flg  off TTL Pro  cks      Src      Dst Data\n");
-//    printf(" %1x  %1x  %02x %04x %04x",
-//            ip->version, ip->ihl, ip->tos, ip->tot_len, ip->id);
-//    printf("   %1x %04x", ((ip->frag_off) & 0xe000) >> 13,
-//            (ip->frag_off) & 0x1fff);
-//    printf("  %02x  %02x %04x", ip->ttl, ip->protocol, ip->check);
-//    printf(" %s ", inet_ntoa(*(struct in_addr *)&ip->saddr));
-//    printf(" %s ", inet_ntoa(*(struct in_addr *)&ip->daddr));
-//    printf("\n");
-//    pr_options(cp, hlen);
-//}
+

@@ -36,7 +36,6 @@ static void interrupt(int param) {
                 ping_ctx.max_ping_time / 1000, ping_ctx.max_ping_time % 1000,
                 mdev / 1000, mdev % 1000
         );
-
     }
 
     exit(EXIT_SUCCESS);
