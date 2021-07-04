@@ -1,7 +1,7 @@
 #include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
-# include <netinet/ip_icmp.h>
+#include <netinet/ip_icmp.h>
 #include <netdb.h>
 
 static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t word_count);

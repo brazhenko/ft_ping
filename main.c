@@ -35,12 +35,14 @@ void ping() {
                 ping_ctx.messages_sent + 1,
                 ping_ctx.payload_size,
                 ((struct sockaddr_in *)ping_ctx.src_addr_info->ai_addr)->sin_addr.s_addr,
-                ((struct sockaddr_in *)ping_ctx.dest_addr_info->ai_addr)->sin_addr.s_addr)
-            != 0) {
+                ping_ctx.dest_addr
+            ) != 0) {
 
             perror("cannot send echo");
             exit(EXIT_FAILURE);
+
         }
+
         ping_ctx.messages_sent++;
         sleep(ping_ctx.interval_between_echoes);
     }
@@ -110,9 +112,6 @@ void pong() {
 //        printf("dest computor: %s\n", ip_buffer);
 
             inet_ntop(AF_INET, &sender_ip, ip_buffer, sizeof ip_buffer);
-            printf("source computor: %s\n", ip_buffer);
-
-            printf("echo type: %d\n", icmp_hdr->icmp_type);
 
             if (ping_ctx.flags[PING_NO_DNS_NAME]) {
                 // Print out without DNS name
@@ -219,45 +218,44 @@ void pong() {
     }
 }
 
-struct addrinfo* ping_lookup(const char *bin_name, const char *host)
-{
-    struct addrinfo hints, *res, *result;
-    int errcode;
-    char addrstr[100];
-    void *ptr;
-
-    memset (&hints, 0, sizeof (hints));
-    hints.ai_family = PF_INET;
-    hints.ai_flags |= AI_CANONNAME;
-    errcode = getaddrinfo(host, NULL, &hints, &result);
-    if (errcode != 0) {
-        fprintf(stderr, "%s: %s: %s\n", bin_name, host, gai_strerror(errcode));
-        exit(EXIT_FAILURE);
-    }
-
-    res = result;
-
-    printf ("Host: %s\n", host);
-    if (res) {
-        switch (res->ai_family)
-        {
-            case AF_INET:
-                ptr = &((struct sockaddr_in *) res->ai_addr)->sin_addr;
-                break;
-            case AF_INET6:
-                ptr = &((struct sockaddr_in6 *) res->ai_addr)->sin6_addr;
-                break;
-        }
-        inet_ntop(res->ai_family, ptr, addrstr, 100);
-        printf("IPv%d address: %s %s\n", res->ai_family == PF_INET6 ? 6 : 4, addrstr, res->ai_canonname);
-    }
-    else {
-        fprintf(stderr, "Unknown error\n");
-        exit(EXIT_FAILURE);
-    }
-
-    return res;
-}
+//struct addrinfo* ping_lookup(const char *bin_name, const char *host) {
+//    struct addrinfo hints, *res, *result;
+//    int errcode;
+//    char addrstr[100];
+//    void *ptr;
+//
+//    memset (&hints, 0, sizeof (hints));
+//    hints.ai_family = PF_INET;
+//    hints.ai_flags |= AI_CANONNAME;
+//    errcode = getaddrinfo(host, NULL, &hints, &result);
+//    if (errcode != 0) {
+//        fprintf(stderr, "%s: %s: %s\n", bin_name, host, gai_strerror(errcode));
+//        exit(EXIT_FAILURE);
+//    }
+//
+//    res = result;
+//
+//    printf ("Host: %s\n", host);
+//    if (res) {
+//        switch (res->ai_family)
+//        {
+//            case AF_INET:
+//                ptr = &((struct sockaddr_in *) res->ai_addr)->sin_addr;
+//                break;
+//            case AF_INET6:
+//                ptr = &((struct sockaddr_in6 *) res->ai_addr)->sin6_addr;
+//                break;
+//        }
+//        inet_ntop(res->ai_family, ptr, addrstr, 100);
+//        printf("IPv%d address: %s %s\n", res->ai_family == PF_INET6 ? 6 : 4, addrstr, res->ai_canonname);
+//    }
+//    else {
+//        fprintf(stderr, "Unknown error\n");
+//        exit(EXIT_FAILURE);
+//    }
+//
+//    return res;
+//}
 
 int main(int argc, char **argv) {
     initialize_context(argc, argv);

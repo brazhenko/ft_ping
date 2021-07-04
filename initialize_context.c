@@ -73,6 +73,7 @@ static void set_default_args() {
         exit(EXIT_FAILURE);
     }
 }
+int get_ipaddr_by_name(const char *name, in_addr_t *out);
 
 void initialize_context(int argc, char **argv) {
     set_default_args();
@@ -178,7 +179,10 @@ void initialize_context(int argc, char **argv) {
 
     ping_ctx.icmp_sock = icmp_sock;
 
-    ping_ctx.dest_addr_info = ping_lookup(argv[0], ping_ctx.dest);
+    int err_code = get_ipaddr_by_name(ping_ctx.dest, &ping_ctx.dest_addr);
+    if (err_code) {
+        fprintf(stderr, "%s: %s: %s\n", argv[0], ping_ctx.dest, gai_strerror(err_code));
+    }
 
     char hostname[1024] = {0};
     gethostname(hostname, sizeof hostname - 1);
@@ -194,9 +198,4 @@ void initialize_context(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
     ping_ctx.src_addr_info = info;
-
-//    for(p = info; p != NULL; p = p->ai_next) {
-//        printf("hostname: %s\n", p->ai_canonname);
-//    }
-
 }

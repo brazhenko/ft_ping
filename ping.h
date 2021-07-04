@@ -50,7 +50,7 @@ struct s_ping_context {
     bool        flags[256];
     const char  *dest;
     int         icmp_sock;
-    struct addrinfo*    dest_addr_info;
+    in_addr_t   dest_addr;
     struct addrinfo*    src_addr_info;
     int         payload_size;
     size_t      response_count_limit;
