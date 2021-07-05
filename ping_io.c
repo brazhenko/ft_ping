@@ -9,7 +9,6 @@
 #include <time.h>
 
 extern ping_context_t ping_ctx;
-static __suseconds_t time_diff(struct timeval* begin, struct timeval *end);
 
 void print_iphdr(struct iphdr *ip)
 {
@@ -43,10 +42,8 @@ void sync_ping() {
                 ping_ctx.src_addr,
                 ping_ctx.dest_addr
         ) != 0) {
-
             perror("cannot send echo");
             exit(EXIT_FAILURE);
-
         }
 
         ping_ctx.messages_sent++;
@@ -164,6 +161,7 @@ void sync_pong() {
             }
         }
         else {
+            ping_ctx.errors_count++;
             inet_ntop(AF_INET, &sender_ip, ip_buffer, sizeof ip_buffer);
 
             if (ping_ctx.flags[PING_NO_DNS_NAME]) {
@@ -200,7 +198,7 @@ void sync_pong() {
 }
 
 
-static __suseconds_t time_diff(struct timeval* begin, struct timeval *end) {
+__suseconds_t time_diff(struct timeval* begin, struct timeval *end) {
     __suseconds_t ret;
 
     ret = end->tv_sec - begin->tv_sec;
