@@ -34,6 +34,7 @@
 # define PING_IPV4_DEFAULT_TTL_PATH "/proc/sys/net/ipv4/ip_default_ttl"
 # define PING_VERSION_STR           "ft_ping v0.0.1"
 # define MICROSECONDS_IN_SECOND     1000000
+# define MINIMUM_WAIT_MICROSECONDS  10000
 
 #define max(a,b) \
    ({ __typeof__ (a) _a = (a); \

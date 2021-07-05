@@ -50,7 +50,12 @@ void sync_ping() {
         }
 
         ping_ctx.messages_sent++;
-        sleep(ping_ctx.interval_between_echoes);
+        if (ping_ctx.interval_between_echoes == 0) {
+            usleep(MINIMUM_WAIT_MICROSECONDS);
+        }
+        else {
+            sleep(ping_ctx.interval_between_echoes);
+        }
     }
 }
 
@@ -143,6 +148,7 @@ void sync_pong() {
                 ping_ctx.max_ping_time = max(ping_ctx.max_ping_time, trip_time);
                 ping_ctx.acc_ping_time += trip_time;
                 ping_ctx.acc_ping_time2 += (trip_time * trip_time);
+
                 ping_ctx.stats_count++;
                 sprintf(output + strlen(output), "time=%ld.%02ld ms",
                         trip_time / 1000, trip_time % 1000 / 10);
