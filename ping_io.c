@@ -162,11 +162,6 @@ void sync_pong() {
                 printf("%c", '\a');
                 fflush(stdout);
             }
-
-            // End job if needed
-            if (ping_ctx.flags[PING_RESPONSE_LIM] && ping_ctx.message_received == ping_ctx.response_count_limit) {
-                raise(SIGINT);
-            }
         }
         else {
             // Bad echo reply received
@@ -203,6 +198,11 @@ void sync_pong() {
         }
         if (ping_ctx.flags[PING_VERBOSE] && icmp_hdr->icmp_type != ICMP_ECHOREPLY) {
             print_iphdr((struct iphdr*)ip_hdr);
+        }
+
+        // End job if needed
+        if (ping_ctx.flags[PING_RESPONSE_LIM] && ping_ctx.message_received == ping_ctx.response_count_limit) {
+            raise(SIGINT);
         }
     }
 }
