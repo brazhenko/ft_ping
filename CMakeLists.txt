@@ -3,7 +3,7 @@ project(ft_ping C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(ft_ping main.c ping.h initialize_context.c initialize_signals.c send_echo_msg_v4.c dns_resolvers.c)
+add_executable(ft_ping main.c ping.h initialize_context.c initialize_signals.c send_icmp_msg_v4.c dns_resolvers.c ping_io.c)
 
 find_package(Threads REQUIRED)
 

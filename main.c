@@ -55,11 +55,12 @@ void sync_ping() {
 }
 
 void sync_pong() {
-    char            buffer[2048];
-    ssize_t         ret;
+    char    buffer[2048];
+    ssize_t ret;
     struct timeval  current_time, send_time;
-    char            output[1024];
-    char            ip_buffer[64];
+    char    output[1024];
+    char    ip_buffer[64];
+    char    host_name[NI_MAXHOST];
 
     struct iovec    io = {
         .iov_base = buffer,
@@ -124,7 +125,12 @@ void sync_pong() {
                 sprintf(output + strlen(output), "from %s: ", ip_buffer);
             }
             else {
-                sprintf(output + strlen(output), "from %s (%s): ", ip_buffer, ip_buffer);
+                if (get_name_by_ipaddr(sender_ip, host_name, sizeof host_name) != 0) {
+                    perror("cannot resolve ip");
+                    exit(EXIT_FAILURE);
+                }
+
+                sprintf(output + strlen(output), "from %s (%s): ", host_name, ip_buffer);
             }
 
             sprintf(output + strlen(output), "icmp_seq=%d ", ntohs(icmp_hdr->icmp_seq));
@@ -163,7 +169,11 @@ void sync_pong() {
                 sprintf(output + strlen(output), "From %s ", ip_buffer);
             }
             else {
-                sprintf(output + strlen(output), "From %s (%s) ", ip_buffer, ip_buffer);
+                if (get_name_by_ipaddr(sender_ip, host_name, sizeof host_name) != 0) {
+                    perror("cannot resolve ip");
+                    exit(EXIT_FAILURE);
+                }
+                sprintf(output + strlen(output), "From %s (%s) ", host_name, ip_buffer);
             }
 
             sprintf(output + strlen(output), "icmp_seq=%d ",

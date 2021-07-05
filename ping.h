@@ -87,6 +87,7 @@ int send_icmp_msg_v4(
         in_addr_t source_ip,
         in_addr_t dest_ip);
 int get_ipaddr_by_name(const char *name, in_addr_t *out, char *canon_name);
+int get_name_by_ipaddr(in_addr_t ip, char *host, size_t host_len);
 
 
 #endif
