@@ -9,7 +9,7 @@
 
 extern ping_context_t ping_ctx;
 
-void print_iphdr(struct iphdr *ip)
+static void print_iphdr(struct iphdr *ip)
 {
     char    ip_buffer[64] = { 0 };
 
@@ -206,7 +206,6 @@ void sync_pong() {
         }
     }
 }
-
 
 __suseconds_t time_diff(struct timeval* begin, struct timeval *end) {
     __suseconds_t ret;

@@ -7,8 +7,8 @@
 static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t word_count);
 
 /*
- * Function: send_icmp_msg_v4
- * --------------------------
+ * Function: send_icmp_msg_v4()
+ * ----------------------------
  *      Makes up an icmp_v4 echo message
  *  (https://datatracker.ietf.org/doc/html/rfc792)
  *  and sends to a particular IP-address,
@@ -56,7 +56,7 @@ int send_icmp_msg_v4(
     ip_header->ip_tos = 0;
     ip_header->ip_len = htons(entire_msg_size);
     ip_header->ip_id = id;
-    ip_header->ip_off = 0; //??
+    ip_header->ip_off = 0;
     ip_header->ip_ttl = ttl;
     ip_header->ip_p = IPPROTO_ICMP;
     ip_header->ip_dst.s_addr = dest_ip;

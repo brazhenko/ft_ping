@@ -5,6 +5,9 @@ set(CMAKE_C_STANDARD 99)
 
 add_executable(ft_ping main.c ping.h initialize_context.c initialize_signals.c send_icmp_msg_v4.c dns_resolvers.c ping_io.c)
 
+set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+set (CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fno-omit-frame-pointer -fsanitize=address")
+
 find_package(Threads REQUIRED)
 
 target_link_libraries(ft_ping m)

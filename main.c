@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-extern ping_context_t ping_ctx;
-
 static void async_ping() {
     pthread_t thread;
 

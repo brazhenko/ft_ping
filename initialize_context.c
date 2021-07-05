@@ -7,75 +7,25 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-ping_context_t ping_ctx = {};
+ping_context_t ping_ctx;
 
-static void dump_usage(const char *bin_name) {
-    fprintf(stderr,
-        "\n"
-        "Usage\n"
-        "  %s [options] <destination>\n"
-        "\n"
-        "Options:\n"
-        "  <destination>      dns name or ip address\n"
-        "  -a                 use audible ping\n"
-        "  -c <count>         stop after <count> replies\n"
-        "  -D                 print timestamps\n"
-        "  -h                 print help and exit\n"
-        "  -i <interval>      seconds between sending each packet\n"
-        "  -n                 no dns name resolution\n"
-        "  -q                 quiet output\n"
-        "  -s <size>          use <size> as number of data bytes to be sent\n"
-        "  -t <ttl>           define time to live\n"
-        "  -v                 verbose output\n"
-        "  -V                 print version and exit\n"
-        "  -w <deadline>      reply wait <deadline> in seconds\n"
-        , bin_name);
-}
+static void dump_usage(const char *bin_name);
+static void dump_version();
+static void set_default_args();
 
-static void dump_version() {
-    printf("%s built on %s at %s\n", PING_VERSION_STR, __DATE__, __TIME__);
-}
-
-static void set_default_args() {
-    // Clear up the structure
-    memset(&ping_ctx, 0, sizeof ping_ctx);
-
-    // Set default payload size
-    ping_ctx.payload_size = 56;
-
-    // Set default ttl
-    int ttl_fd = open(PING_IPV4_DEFAULT_TTL_PATH, O_RDONLY);
-    char arr[1024] = {0};
-    if (ttl_fd == -1) {
-        perror("cannot open ttl var file");
-        exit(EXIT_FAILURE);
-    }
-    if (read(ttl_fd, arr,15
-            /* some random digit num which is greater than possible ttl*/ ) == -1) {
-        perror("cannot read ttl var file");
-        exit(EXIT_FAILURE);
-    }
-    if (close(ttl_fd) == -1) {
-        perror("cannot close ttl var file");
-        exit(EXIT_FAILURE);
-    }
-
-    ping_ctx.ttl = atoi(arr);
-
-    // Set default interval between echoes
-    ping_ctx.interval_between_echoes = 1;
-
-    // Stats
-    ping_ctx.messages_sent = 0;
-    ping_ctx.error_messages_received = 0;
-    ping_ctx.messages_received = 0;
-    ping_ctx.min_ping_time = UINT64_MAX;
-
-    if (gettimeofday(&ping_ctx.time_program_started, NULL) != 0) {
-        perror("cannot get start time");
-        exit(EXIT_FAILURE);
-    }
-}
+/*
+ * Function: initialize_context()
+ * ----------------------------
+ *  Handles programm's argc and fills global
+ *  structure ping_ctx;
+ *
+ *  argc - argument count
+ *
+ *  argv - argument vector
+ *
+ *  returns:    no return
+ *
+ */
 
 void initialize_context(int argc, char **argv) {
     set_default_args();
@@ -209,3 +159,75 @@ void initialize_context(int argc, char **argv) {
         exit(EXIT_FAILURE);
     }
 }
+
+ping_context_t ping_ctx = {};
+
+static void dump_usage(const char *bin_name) {
+    fprintf(stderr,
+        "\n"
+        "Usage\n"
+        "  %s [options] <destination>\n"
+        "\n"
+        "Options:\n"
+        "  <destination>      dns name or ip address\n"
+        "  -a                 use audible ping\n"
+        "  -c <count>         stop after <count> replies\n"
+        "  -D                 print timestamps\n"
+        "  -h                 print help and exit\n"
+        "  -i <interval>      seconds between sending each packet\n"
+        "  -n                 no dns name resolution\n"
+        "  -q                 quiet output\n"
+        "  -s <size>          use <size> as number of data bytes to be sent\n"
+        "  -t <ttl>           define time to live\n"
+        "  -v                 verbose output\n"
+        "  -V                 print version and exit\n"
+        "  -w <deadline>      reply wait <deadline> in seconds\n"
+        , bin_name);
+}
+
+static void dump_version() {
+    printf("%s built on %s at %s\n", PING_VERSION_STR, __DATE__, __TIME__);
+}
+
+static void set_default_args() {
+    // Clear up the structure
+    memset(&ping_ctx, 0, sizeof ping_ctx);
+
+    // Set default payload size
+    ping_ctx.payload_size = 56;
+
+    // Set default ttl
+    int ttl_fd = open(PING_IPV4_DEFAULT_TTL_PATH, O_RDONLY);
+    char arr[1024] = {0};
+    if (ttl_fd == -1) {
+        perror("cannot open ttl var file");
+        exit(EXIT_FAILURE);
+    }
+    if (read(ttl_fd, arr,15
+            /* some random digit num which is greater than possible ttl*/ ) == -1) {
+        perror("cannot read ttl var file");
+        exit(EXIT_FAILURE);
+    }
+    if (close(ttl_fd) == -1) {
+        perror("cannot close ttl var file");
+        exit(EXIT_FAILURE);
+    }
+
+    ping_ctx.ttl = atoi(arr);
+
+    // Set default interval between echoes
+    ping_ctx.interval_between_echoes = 1;
+
+    // Stats
+    ping_ctx.messages_sent = 0;
+    ping_ctx.error_messages_received = 0;
+    ping_ctx.messages_received = 0;
+    ping_ctx.min_ping_time = UINT64_MAX;
+
+    if (gettimeofday(&ping_ctx.time_program_started, NULL) != 0) {
+        perror("cannot get start time");
+        exit(EXIT_FAILURE);
+    }
+}
+
+
