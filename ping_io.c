@@ -6,7 +6,6 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <sys/time.h>
-#include <time.h>
 
 extern ping_context_t ping_ctx;
 
@@ -20,7 +19,7 @@ void print_iphdr(struct iphdr *ip)
     printf("  %02x  %02x %04x", ip->ttl, ip->protocol, ip->check);
     printf(" %s ", inet_ntoa(*(struct in_addr *)&ip->saddr));
     printf(" %s ", inet_ntoa(*(struct in_addr *)&ip->daddr));
-    printf("\n");
+    printf("\n\n");
 }
 
 void sync_ping() {
@@ -60,9 +59,7 @@ void sync_pong() {
     char    buffer[2048];
     ssize_t ret;
     struct timeval  current_time, send_time;
-    char    output[1024];
-    char    ip_buffer[64];
-    char    host_name[NI_MAXHOST];
+    char    output[1024], ip_buffer[64], host_name[NI_MAXHOST];
 
     struct iovec    io = {
             .iov_base = buffer,
@@ -79,8 +76,10 @@ void sync_pong() {
     };
 
     while (true) {
+        // Read input stream...
         ret = recvmsg(ping_ctx.icmp_sock, &msg, 0);
 
+        // Handle errors
         if (ret < 0) {
             perror("Holy shit!");
             exit(EXIT_FAILURE);
@@ -100,25 +99,32 @@ void sync_pong() {
             exit(EXIT_FAILURE);
         }
 
+        // Struct pointers
+        struct ip* ip_hdr = (struct ip*)buffer;
+        struct icmp *icmp_hdr = (struct icmp*)(buffer + ip_hdr_size);
+
+        // Ignore messages which are not for us
+        if (ip_hdr->ip_dst.s_addr != ping_ctx.src_addr) {
+            continue;
+        }
+
         // Clear output print buffer...
         memset(output, 0, sizeof output);
 
+        // Timestamp if needed
         if (ping_ctx.flags[PING_TIMESTAMP_PREF]) {
             sprintf(output + strlen(output), "[%zu.%06zu] ", current_time.tv_sec, current_time.tv_usec);
         }
 
         // Parse response msg
-        struct ip* ip_hdr = (struct ip*)buffer;
-        struct icmp *icmp_hdr = (struct icmp*)(buffer + ip_hdr_size);
-
         in_addr_t sender_ip = ip_hdr->ip_src.s_addr;
 
         if (icmp_hdr->icmp_type == ICMP_ECHOREPLY) {
             // Good echo-reply received
-            sprintf(output + strlen(output), "%ld bytes ", ntohs(ip_hdr->ip_len) - sizeof (struct iphdr));
-            inet_ntop(AF_INET, &ip_hdr->ip_dst.s_addr, ip_buffer, sizeof ip_buffer);
-//        printf("dest computor: %s\n", ip_buffer);
+            ping_ctx.message_received++;
 
+            sprintf(output + strlen(output), "%ld bytes ",
+                    ntohs(ip_hdr->ip_len) - sizeof (struct iphdr));
             inet_ntop(AF_INET, &sender_ip, ip_buffer, sizeof ip_buffer);
 
             if (ping_ctx.flags[PING_NO_DNS_NAME]) {
@@ -151,17 +157,21 @@ void sync_pong() {
                         trip_time / 1000, trip_time % 1000 / 10);
             }
 
+            // Put ASCII 0x07 when good packet received
             if (ping_ctx.flags[PING_AUDIBLE]) {
                 printf("%c", '\a');
                 fflush(stdout);
             }
-            ping_ctx.message_received++;
+
+            // End job if needed
             if (ping_ctx.flags[PING_RESPONSE_LIM] && ping_ctx.message_received == ping_ctx.response_count_limit) {
                 raise(SIGINT);
             }
         }
         else {
+            // Bad echo reply received
             ping_ctx.errors_count++;
+
             inet_ntop(AF_INET, &sender_ip, ip_buffer, sizeof ip_buffer);
 
             if (ping_ctx.flags[PING_NO_DNS_NAME]) {
@@ -177,16 +187,16 @@ void sync_pong() {
             }
 
             sprintf(output + strlen(output), "icmp_seq=%d ",
-                    ntohs(*(uint16_t*)&buffer[ret - 2]) /* on error icmp_seq number is in the last 2 bytes of payload */);
-            if (icmp_hdr->icmp_type == ICMP_TIME_EXCEEDED) {
+                    /* on error icmp_seq number is in the last 2 bytes of payload */
+                    ntohs(*(uint16_t*)&buffer[ret - 2]));
+
+            // Append error
+            if (icmp_hdr->icmp_type == ICMP_TIME_EXCEEDED)
                 sprintf(output + strlen(output), "Time to live exceeded");
-            }
-            else if (icmp_hdr->icmp_type == ICMP_DEST_UNREACH) {
+            else if (icmp_hdr->icmp_type == ICMP_DEST_UNREACH)
                 sprintf(output + strlen(output), "Destination Unreachable");
-            }
-            else {
-                sprintf(output + strlen(output), "Unknown ICMP return code: %x", icmp_hdr->icmp_seq);
-            }
+            else
+                sprintf(output + strlen(output), "Unknown ICMP return code: %x", icmp_hdr->icmp_type);
         }
         if (!ping_ctx.flags[PING_QUIET]) {
             printf("%s\n", output);

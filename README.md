@@ -43,7 +43,7 @@ tcpdump -x "ip[2:2] == 84"
 ./ft_ping 
 ```
 
-### Useful links
+### Useful links for further exploration
 * http://www.netpatch.ru/windows-files/pingscan/raw_ping.c.html
 
 * http://www.n-cg.net/hec.htm
@@ -53,3 +53,5 @@ tcpdump -x "ip[2:2] == 84"
 * https://masandilov.ru/network/guide_to_network_programming5
 
 * https://beej.us/guide/bgnet/html/#getaddrinfoman
+
+* https://perso.telecom-paristech.fr/drossi/paper/rossi17ipid.pdf

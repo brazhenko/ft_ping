@@ -33,7 +33,7 @@ static void dump_usage(const char *bin_name) {
 }
 
 static void dump_version() {
-    printf("%s\n", PING_VERSION_STR);
+    printf("%s built on %s at %s\n", PING_VERSION_STR, __DATE__, __TIME__);
 }
 
 static void set_default_args() {
@@ -67,6 +67,7 @@ static void set_default_args() {
 
     // Stats
     ping_ctx.messages_sent = 0;
+    ping_ctx.errors_count = 0;
     ping_ctx.message_received = 0;
     ping_ctx.min_ping_time = UINT64_MAX;
 
@@ -186,7 +187,8 @@ void initialize_context(int argc, char **argv) {
             ping_ctx.canon_dest,
             sizeof ping_ctx.canon_dest);
     if (err_code) {
-        fprintf(stderr, "%s: %s: %s\n", argv[0], ping_ctx.dest, gai_strerror(err_code));
+        fprintf(stderr, "%s: %s: %s\n",
+                argv[0], ping_ctx.dest, gai_strerror(err_code));
         exit(EXIT_FAILURE);
     }
 
@@ -201,7 +203,8 @@ void initialize_context(int argc, char **argv) {
             &ping_ctx.src_addr,
             NULL, 0);
     if (err_code != 0) {
-        fprintf(stderr, "%s: %s: %s\n", argv[0], hostname, gai_strerror(err_code));
+        fprintf(stderr, "%s: %s: %s\n",
+                argv[0], hostname, gai_strerror(err_code));
         exit(EXIT_FAILURE);
     }
 }

@@ -31,10 +31,6 @@ static void interrupt(int a) {
         const uint64_t avg = ping_ctx.acc_ping_time / ping_ctx.stats_count;
         const uint64_t avg2 = ping_ctx.acc_ping_time2 / ping_ctx.stats_count;
         const uint64_t mdev = sqrt(avg2 - avg * avg);
-        const uint64_t working_time =
-                ((end_time.tv_sec - ping_ctx.time_program_started.tv_sec) * 1000000
-                + (end_time.tv_usec - ping_ctx.time_program_started.tv_usec)) / 1000;
-
 
         printf("rtt min/avg/max/mdev = %ld.%03ld/%ld.%03ld/%ld.%03ld/%ld.%03ld ms\n",
                 ping_ctx.min_ping_time / 1000, ping_ctx.min_ping_time % 1000,
