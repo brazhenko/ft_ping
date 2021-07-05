@@ -63,13 +63,14 @@ struct s_ping_context {
     size_t      interval_between_echoes;
     int         ttl;
     size_t      messages_sent;
-    size_t      message_received;
+    size_t      messages_received;
+    size_t      error_messages_received;
 
     struct timeval time_program_started;
-    size_t      errors_count;
-    uint64_t    min_ping_time;
-    // In microseconds
     size_t      stats_count;
+
+    // In microseconds
+    uint64_t    min_ping_time;
     uint64_t    max_ping_time;
     uint64_t    acc_ping_time;
     uint64_t    acc_ping_time2;

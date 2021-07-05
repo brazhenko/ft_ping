@@ -116,7 +116,7 @@ void sync_pong() {
 
         if (icmp_hdr->icmp_type == ICMP_ECHOREPLY) {
             // Good echo-reply received
-            ping_ctx.message_received++;
+            ping_ctx.messages_received++;
 
             sprintf(output + strlen(output), "%ld bytes ",
                     ntohs(ip_hdr->ip_len) - sizeof (struct iphdr));
@@ -160,7 +160,7 @@ void sync_pong() {
         }
         else {
             // Bad echo reply received
-            ping_ctx.errors_count++;
+            ping_ctx.error_messages_received++;
 
             inet_ntop(AF_INET, &sender_ip, ip_buffer, sizeof ip_buffer);
 
@@ -196,7 +196,8 @@ void sync_pong() {
         }
 
         // End job if needed
-        if (ping_ctx.flags[PING_RESPONSE_LIM] && ping_ctx.message_received == ping_ctx.response_count_limit) {
+        if (ping_ctx.flags[PING_RESPONSE_LIM]
+            && ping_ctx.messages_received + ping_ctx.error_messages_received == ping_ctx.response_count_limit) {
             raise(SIGINT);
         }
     }

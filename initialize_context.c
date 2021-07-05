@@ -67,8 +67,8 @@ static void set_default_args() {
 
     // Stats
     ping_ctx.messages_sent = 0;
-    ping_ctx.errors_count = 0;
-    ping_ctx.message_received = 0;
+    ping_ctx.error_messages_received = 0;
+    ping_ctx.messages_received = 0;
     ping_ctx.min_ping_time = UINT64_MAX;
 
     if (gettimeofday(&ping_ctx.time_program_started, NULL) != 0) {

@@ -17,11 +17,11 @@ static void interrupt(int a) {
 
     printf("\n--- %s ping statistics ---\n", ping_ctx.canon_dest);
 
-    const float loss_percentage = (1 - (float)ping_ctx.message_received / (float)ping_ctx.messages_sent) * 100;
+    const float loss_percentage = (1 - (float)ping_ctx.messages_received / (float)ping_ctx.messages_sent) * 100;
     printf("%zu packets transmitted, %zu received, ",
-            ping_ctx.messages_sent, ping_ctx.message_received);
-    if (ping_ctx.errors_count != 0) {
-        printf("+%zu errors, ", ping_ctx.errors_count);
+            ping_ctx.messages_sent, ping_ctx.messages_received);
+    if (ping_ctx.error_messages_received != 0) {
+        printf("+%zu errors, ", ping_ctx.error_messages_received);
     }
     printf("%.2f%% packet loss, time %ldms\n",
             loss_percentage,
