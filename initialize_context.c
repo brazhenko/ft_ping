@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-ping_context_t ping_ctx;
+ping_context_t ping_ctx = {};
 
 static void dump_usage(const char *bin_name);
 static void dump_version();
@@ -160,7 +160,6 @@ void initialize_context(int argc, char **argv) {
     }
 }
 
-ping_context_t ping_ctx = {};
 
 static void dump_usage(const char *bin_name) {
     fprintf(stderr,
