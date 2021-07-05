@@ -26,7 +26,7 @@ void print_iphdr(struct iphdr *ip)
     printf("\n");
 }
 
-void ping() {
+void sync_ping() {
     while (true) {
         if (send_icmp_msg_v4(
                 ping_ctx.icmp_sock,
@@ -49,7 +49,7 @@ void ping() {
     }
 }
 
-void pong() {
+void sync_pong() {
     char            buffer[512];
     ssize_t         ret;
     struct timeval  current_time, send_time;
@@ -219,13 +219,10 @@ void pong() {
     }
 }
 
-int main(int argc, char **argv) {
-    initialize_context(argc, argv);
-    initialize_signals();
-
+static void async_ping() {
     // Detached pinger
     pthread_t thread;
-    if (pthread_create(&thread, NULL, (void *(*)(void *))ping, NULL) != 0) {
+    if (pthread_create(&thread, NULL, (void *(*)(void *))sync_ping, NULL) != 0) {
         perror("cannot create thread");
         exit(EXIT_FAILURE);
     }
@@ -233,9 +230,16 @@ int main(int argc, char **argv) {
         perror("cannot detach thread");
         exit(EXIT_FAILURE);
     }
+}
 
-    // Response listener
-    pong();
+int main(int argc, char **argv) {
+    // Init all
+    initialize_context(argc, argv);
+    initialize_signals();
+
+    // Do all
+    async_ping();
+    sync_pong();
 }
 
 
