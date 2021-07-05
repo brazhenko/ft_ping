@@ -8,7 +8,7 @@
 
 extern ping_context_t ping_ctx;
 
-static void interrupt(int a) {
+static void interrupt(int a __attribute__((unused))) {
     struct timeval end_time;
     if (gettimeofday(&end_time, NULL) != 0) {
         perror("cannot get end time");

@@ -114,7 +114,7 @@ int send_icmp_msg_v4(
 static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t word_count) {
     uint32_t acc = 0;
 
-    for (int i = 0; i < word_count; i++) {
+    for (size_t i = 0; i < word_count; i++) {
         acc += words[i];
         acc += (acc >> 16);
         acc &= UINT16_MAX;

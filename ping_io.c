@@ -86,7 +86,7 @@ void sync_pong() {
         else if (ret == 0) {
             perror("Connection closed");
         }
-        if (ret < ip_hdr_size + icmp_hdr_size) {
+        if ((size_t)ret < ip_hdr_size + icmp_hdr_size) {
             fprintf(stderr, "Something impossible happened,"
                     "packet is too small, ignoring\n");
             continue;
