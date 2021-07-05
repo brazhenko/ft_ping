@@ -5,6 +5,7 @@
 ```bash
 docker build -t remote -f Dockerfile.remote .
 docker run -d --cap-add sys_ptrace -p127.0.0.1:2222:22 --name remote_env remote
+ssh-keygen -f "$HOME/.ssh/known_hosts" -R "[localhost]:2222"
 ```
 
 
@@ -46,3 +47,5 @@ tcpdump -x "ip[2:2] == 84"
 * https://habr.com/ru/post/352300/
 
 * https://masandilov.ru/network/guide_to_network_programming5
+
+* https://beej.us/guide/bgnet/html/#getaddrinfoman
