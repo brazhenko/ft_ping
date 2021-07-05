@@ -166,6 +166,7 @@ void initialize_context(int argc, char **argv) {
         fprintf(stderr, "%s: usage error: Destination address required\n", argv[0]);
         exit(EXIT_FAILURE);
     }
+
     ping_ctx.dest = argv[optind];
 
     // Prepare socket

@@ -56,24 +56,19 @@ void sync_ping() {
 }
 
 void sync_pong() {
-    char    buffer[2048];
-    ssize_t ret;
+    char    output[1024], ip_buffer[64], host_name[NI_MAXHOST], buffer[2048];
     struct timeval  current_time, send_time;
-    char    output[1024], ip_buffer[64], host_name[NI_MAXHOST];
+    struct iovec   iov[1];
+    struct msghdr  msg;
+    ssize_t ret;
 
-    struct iovec    io = {
-            .iov_base = buffer,
-            .iov_len = sizeof buffer
-    };
-    struct msghdr    msg = {
-            .msg_name = NULL,
-            .msg_namelen = 0,
-            .msg_iov = &io,
-            .msg_iovlen = 1,
-            .msg_control = buffer,
-            .msg_controllen = sizeof(buffer),
-            .msg_flags = 0
-    };
+    // Init message struct
+    memset(&msg, 0, sizeof(msg));
+    memset(iov, 0, sizeof(iov));
+    iov[0].iov_base = buffer;
+    iov[0].iov_len = sizeof buffer;
+    msg.msg_iov     = iov;
+    msg.msg_iovlen  = 1;
 
     while (true) {
         // Read input stream...

@@ -11,19 +11,26 @@ ssh-keygen -f "$HOME/.ssh/known_hosts" -R "[localhost]:2222"
 
 ### Usage
 
-```bash
+```zsh
 ./ft_ping google.com
 ```
+
+```zsh
+PING google.com (173.194.220.102) 56(84) bytes of data.
+64 bytes from lk-in-f102.1e100.net (173.194.220.102): icmp_seq=1 ttl=37 time=13.59 ms
+64 bytes from lk-in-f102.1e100.net (173.194.220.102): icmp_seq=2 ttl=37 time=13.84 ms
+```
+
 
 Default message ping `echo`s is 84 bytes length.
 We can track how does our ping do in other terminal:
 
-```bash
+```zsh
 # 84 coud be changed dependind ths -s [size] option (e.g. for -s 10 you need "ip[2:2] == 38")
 tcpdump -x "ip[2:2] == 84"  
 ```
 
-```
+```zsh
 12:17:08.174930 IP 2538cd664b5e > lf-in-f113.1e100.net: ICMP echo request, id 3070, seq 1, length 64
 	0x0000:  4500 0054 fe0b 0000 4001 eb2f ac11 0002
 	0x0010:  40e9 a471 0800 7ecf 0bfe 0001 44f8 e260
@@ -42,13 +49,13 @@ tcpdump -x "ip[2:2] == 84"
 
 You also can check DNS resolving via `tcpdump`:
 
-```bash
+```zsh
 tcpdump -x "port 53"  
 ```
 
 
 #### Complicated usage examples
-```bash
+```zsh
 # available options: -vhsacDwVinqt, for more info ./ft_ping -h
 ./ft_ping -a -c 3 -D -i 2 -s 10 ya.ru
 ./ft_ping -a -w 10 ya.ru
