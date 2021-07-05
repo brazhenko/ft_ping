@@ -61,6 +61,28 @@ tcpdump -x "port 53"
 ./ft_ping -a -w 10 ya.ru
 ```
 
+```zsh
+./ft_ping -h
+
+Usage
+  ./ft_ping [options] <destination>
+
+Options:
+  <destination>      dns name or ip address
+  -a                 use audible ping
+  -c <count>         stop after <count> replies
+  -D                 print timestamps
+  -h                 print help and exit
+  -i <interval>      seconds between sending each packet
+  -n                 no dns name resolution
+  -q                 quiet output
+  -s <size>          use <size> as number of data bytes to be sent
+  -t <ttl>           define time to live
+  -v                 verbose output
+  -V                 print version and exit
+  -w <deadline>      reply wait <deadline> in seconds
+```
+
 ### Useful links for further exploration
 * http://www.netpatch.ru/windows-files/pingscan/raw_ping.c.html
 

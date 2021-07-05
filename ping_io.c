@@ -130,7 +130,7 @@ void sync_pong() {
                 // Print out without DNS name
                 sprintf(output + strlen(output), "from %s: ", ip_buffer);
             }
-            else {
+            else if (!ping_ctx.flags[PING_QUIET]){
                 if (get_name_by_ipaddr(sender_ip, host_name, sizeof host_name) != 0) {
                     perror("cannot resolve ip");
                     exit(EXIT_FAILURE);
@@ -172,7 +172,7 @@ void sync_pong() {
                 // Print out without DNS name
                 sprintf(output + strlen(output), "From %s ", ip_buffer);
             }
-            else {
+            else if (!ping_ctx.flags[PING_QUIET]) {
                 if (get_name_by_ipaddr(sender_ip, host_name, sizeof host_name) != 0) {
                     perror("cannot resolve ip");
                     exit(EXIT_FAILURE);
