@@ -4,7 +4,6 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
-#include <netdb.h>
 #include <unistd.h>
 #include <sys/time.h>
 
@@ -80,9 +79,10 @@ static void set_default_args() {
 void initialize_context(int argc, char **argv) {
     set_default_args();
 
-    int c;
+    int c, err_code;
     opterr = 0;
 
+    // Parse argv
     while ((c = getopt(argc, argv, PING_AVL_FLAGS)) != -1)
         switch (c)
         {
@@ -165,40 +165,43 @@ void initialize_context(int argc, char **argv) {
         fprintf(stderr, "%s: usage error: Destination address required\n", argv[0]);
         exit(EXIT_FAILURE);
     }
-
     ping_ctx.dest = argv[optind];
 
+    // Prepare socket
     int icmp_sock = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
     if (icmp_sock < 0) {
         perror("cannot create socket");
         exit(EXIT_FAILURE);
     }
-
     if (setsockopt(icmp_sock, IPPROTO_IP, IP_HDRINCL, (int[1]){1}, sizeof(int)) == -1) {
         perror("cannot set sock option");
         exit(EXIT_FAILURE);
     }
-
     ping_ctx.icmp_sock = icmp_sock;
 
-    int err_code = get_ipaddr_by_name(ping_ctx.dest, &ping_ctx.dest_addr, ping_ctx.canon_dest);
+    // Prepare address of destination
+    err_code = get_ipaddr_by_name(
+            ping_ctx.dest,
+            &ping_ctx.dest_addr,
+            ping_ctx.canon_dest,
+            sizeof ping_ctx.canon_dest);
     if (err_code) {
         fprintf(stderr, "%s: %s: %s\n", argv[0], ping_ctx.dest, gai_strerror(err_code));
         exit(EXIT_FAILURE);
     }
 
+    // Prepare address of source
     char hostname[1024] = {0};
-    gethostname(hostname, sizeof hostname - 1);
-
-    struct addrinfo hints, *info, *p;;
-    memset(&hints, 0, sizeof (hints));
-    hints.ai_family = PF_UNSPEC;
-    hints.ai_flags |= AI_CANONNAME;
-
-    int errcode = getaddrinfo(hostname, NULL, &hints, &info);
-    if (errcode != 0) {
-        perror ("getaddrinfo");
+    if (gethostname(hostname, sizeof hostname - 1) != 0) {
+        perror("cannot get hostname");
         exit(EXIT_FAILURE);
     }
-    ping_ctx.src_addr_info = info;
+    err_code = get_ipaddr_by_name(
+            hostname,
+            &ping_ctx.src_addr,
+            NULL, 0);
+    if (err_code != 0) {
+        fprintf(stderr, "%s: %s: %s\n", argv[0], hostname, gai_strerror(err_code));
+        exit(EXIT_FAILURE);
+    }
 }

@@ -40,7 +40,7 @@ void sync_ping() {
                 ICMP_ECHO,
                 ping_ctx.messages_sent + 1,
                 ping_ctx.payload_size,
-                ((struct sockaddr_in *)ping_ctx.src_addr_info->ai_addr)->sin_addr.s_addr,
+                ping_ctx.src_addr,
                 ping_ctx.dest_addr
         ) != 0) {
 

@@ -22,13 +22,16 @@
  *
  *  canon_name - pointer to string for canon_name, will be filled if not NULL
  *
+ *  canon_name_size - size out output buffer
+ *
  *  returns:    0 - success
  *              OTHER - error, use gai_strerror()
  *              to discover a particular error
  *
  */
 
-int get_ipaddr_by_name(const char *name, in_addr_t *out, char *canon_name) {
+int get_ipaddr_by_name(const char *name, in_addr_t *out,
+            char *canon_name, size_t canon_name_size) {
     struct addrinfo hints, *result;
     int errcode;
 
@@ -43,7 +46,7 @@ int get_ipaddr_by_name(const char *name, in_addr_t *out, char *canon_name) {
 
     *out = ((struct sockaddr_in *)result->ai_addr)->sin_addr.s_addr;
     if (canon_name) {
-        strcpy(canon_name, result->ai_canonname);
+        strncpy(canon_name, result->ai_canonname, canon_name_size);
     }
 
     freeaddrinfo(result);

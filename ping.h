@@ -53,7 +53,7 @@ struct s_ping_context {
     char        canon_dest[NI_MAXHOST];
     int         icmp_sock;
     in_addr_t   dest_addr;
-    struct addrinfo*    src_addr_info;
+    in_addr_t   src_addr;
     int         payload_size;
     size_t      response_count_limit;
     size_t      seconds_to_work;
@@ -86,7 +86,8 @@ int send_icmp_msg_v4(
         size_t payload_size,
         in_addr_t source_ip,
         in_addr_t dest_ip);
-int get_ipaddr_by_name(const char *name, in_addr_t *out, char *canon_name);
+int get_ipaddr_by_name(const char *name, in_addr_t *out,
+        char *canon_name, size_t canon_name_size);
 int get_name_by_ipaddr(in_addr_t ip, char *host, size_t host_len);
 
 
