@@ -33,6 +33,7 @@
 # define PING_LEFETIME_SEC_MAX      1000000
 # define PING_IPV4_DEFAULT_TTL_PATH "/proc/sys/net/ipv4/ip_default_ttl"
 # define PING_VERSION_STR           "ft_ping v0.0.1"
+# define MICROSECONDS_IN_SECOND     1000000
 
 #define max(a,b) \
    ({ __typeof__ (a) _a = (a); \
@@ -63,10 +64,10 @@ struct s_ping_context {
     size_t      message_received;
 
     struct timeval time_program_started;
-    // In microseconds
-    size_t      stats_count;
     size_t      errors_count;
     uint64_t    min_ping_time;
+    // In microseconds
+    size_t      stats_count;
     uint64_t    max_ping_time;
     uint64_t    acc_ping_time;
     uint64_t    acc_ping_time2;
@@ -90,5 +91,7 @@ int get_ipaddr_by_name(const char *name, in_addr_t *out,
         char *canon_name, size_t canon_name_size);
 int get_name_by_ipaddr(in_addr_t ip, char *host, size_t host_len);
 
+void sync_ping();
+void sync_pong();
 
 #endif

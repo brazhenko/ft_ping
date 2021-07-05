@@ -57,7 +57,7 @@ int get_ipaddr_by_name(const char *name, in_addr_t *out,
 /*
  * Function: get_name_by_ipaddr()
  * ------------------------------
- *  Resolve a hostname by IPv4.
+ *  Resolve a hostname by IPv4. Caches up to 10 results.
  *
  *  ip - input IPv4 address
  *
@@ -68,14 +68,28 @@ int get_ipaddr_by_name(const char *name, in_addr_t *out,
  *  returns:    0 - success
  *              OTHER - error, use gai_strerror()
  *              to discover a particular error
+ *
  */
 
 int get_name_by_ipaddr(in_addr_t ip, char *host, size_t host_len) {
-    static int storage[10] = { 0 };
+    struct help {
+        in_addr_t addr;
+        char      hostname[NI_MAXHOST];
+    };
+    static struct help storage[10] = { 0 }; /* No lru, man, no lru */
     static int count = 0;
+
+    // Lookup in cache
+    for (int i = 0; i < count; i++) {
+        if (storage[i].addr == ip) {
+            // Found in cache
+            strncpy(host, storage[i].hostname, host_len);
+            return 0;
+        }
+    }
+
     struct sockaddr_in addr;
     int ret_code;
-
     memset(&addr, 0, sizeof addr);
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = ip;
@@ -85,5 +99,16 @@ int get_name_by_ipaddr(in_addr_t ip, char *host, size_t host_len) {
             host, host_len,
             NULL, 0, 0);
 
-    return ret_code;
+    if (ret_code != 0) {
+        return ret_code;
+    }
+
+    // Append to cache
+    if (count < 10) {
+        storage[count].addr = ip;
+        strncpy(storage[count].hostname, host, NI_MAXHOST);
+        count++;
+    }
+
+    return 0;
 }
