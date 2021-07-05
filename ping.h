@@ -5,6 +5,7 @@
 # include <stddef.h>
 # include <limits.h>
 # include <netinet/ip_icmp.h>
+#include <netdb.h>
 
 # define PING_AVL_FLAGS         "vhs:ac:Dw:Vi:nqt:"
 # define PING_VERBOSE           'v'
@@ -49,6 +50,7 @@ static const size_t         icmp_hdr_size = sizeof (struct icmphdr); // Supposed
 struct s_ping_context {
     bool        flags[256];
     const char  *dest;
+    char        canon_dest[NI_MAXHOST];
     int         icmp_sock;
     in_addr_t   dest_addr;
     struct addrinfo*    src_addr_info;
@@ -84,7 +86,7 @@ int send_icmp_msg_v4(
         size_t payload_size,
         in_addr_t source_ip,
         in_addr_t dest_ip);
-int get_ipaddr_by_name(const char *name, in_addr_t *out);
+int get_ipaddr_by_name(const char *name, in_addr_t *out, char *canon_name);
 
 
 #endif

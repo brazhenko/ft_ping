@@ -8,7 +8,7 @@
 
 extern ping_context_t ping_ctx;
 
-static void interrupt(int param) {
+static void interrupt(int a) {
     printf("\n--- %s ping statistics ---\n", ping_ctx.dest);
 
     if (ping_ctx.stats_count != 0) {

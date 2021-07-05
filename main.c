@@ -25,6 +25,13 @@ void print_iphdr(struct iphdr *ip)
 }
 
 void sync_ping() {
+    char ip_buffer[64] = {0};
+    inet_ntop(AF_INET, &ping_ctx.dest_addr, ip_buffer, sizeof ip_buffer);
+    printf("PING %s (%s) %d(%lu) bytes of data.\n", ping_ctx.canon_dest,
+            ip_buffer,
+            ping_ctx.payload_size,
+            ping_ctx.payload_size + icmp_hdr_size + ip_hdr_size);
+
     while (true) {
         if (send_icmp_msg_v4(
                 ping_ctx.icmp_sock,
@@ -48,10 +55,11 @@ void sync_ping() {
 }
 
 void sync_pong() {
-    char            buffer[512];
+    char            buffer[2048];
     ssize_t         ret;
     struct timeval  current_time, send_time;
     char            output[1024];
+    char            ip_buffer[64];
 
     struct iovec    io = {
         .iov_base = buffer,
@@ -106,7 +114,6 @@ void sync_pong() {
         if (icmp_hdr->icmp_type == ICMP_ECHOREPLY) {
             // Good echo-reply received
             sprintf(output + strlen(output), "%ld bytes ", ntohs(ip_hdr->ip_len) - sizeof (struct iphdr));
-            char ip_buffer[64] = {0};
             inet_ntop(AF_INET, &ip_hdr->ip_dst.s_addr, ip_buffer, sizeof ip_buffer);
 //        printf("dest computor: %s\n", ip_buffer);
 
@@ -117,28 +124,8 @@ void sync_pong() {
                 sprintf(output + strlen(output), "from %s: ", ip_buffer);
             }
             else {
-                struct addrinfo hints, *res, *result;
-                int errcode;
-                char addrstr[100];
-                void *ptr;
-
-                memset (&hints, 0, sizeof (hints));
-                hints.ai_family = PF_INET;
-                hints.ai_flags |= AI_CANONNAME;
-
-
-                errcode = getaddrinfo(ip_buffer, NULL, &hints, &result);
-                if (errcode != 0) {
-                    fprintf(stderr, "%s: %s\n", ip_buffer, gai_strerror(errcode));
-                    exit(EXIT_FAILURE);
-                }
-
-
-                sprintf(output + strlen(output), "from %s (%s): ", result->ai_canonname, ip_buffer);
-
-                freeaddrinfo(result);
+                sprintf(output + strlen(output), "from %s (%s): ", ip_buffer, ip_buffer);
             }
-
 
             sprintf(output + strlen(output), "icmp_seq=%d ", ntohs(icmp_hdr->icmp_seq));
             sprintf(output + strlen(output), "ttl=%d ", ip_hdr->ip_ttl);
@@ -169,7 +156,6 @@ void sync_pong() {
             }
         }
         else {
-            char ip_buffer[64] = {0};
             inet_ntop(AF_INET, &sender_ip, ip_buffer, sizeof ip_buffer);
 
             if (ping_ctx.flags[PING_NO_DNS_NAME]) {
@@ -177,23 +163,7 @@ void sync_pong() {
                 sprintf(output + strlen(output), "From %s ", ip_buffer);
             }
             else {
-                struct addrinfo hints, *res, *result;
-                int errcode;
-                char addrstr[100];
-                void *ptr;
-
-                memset (&hints, 0, sizeof (hints));
-                hints.ai_family = PF_INET;
-                hints.ai_flags |= AI_CANONNAME;
-
-
-                errcode = getaddrinfo(ip_buffer, NULL, &hints, &result);
-                if (errcode != 0) {
-                    fprintf(stderr, "%s: %s\n", ip_buffer, gai_strerror(errcode));
-                    exit(EXIT_FAILURE);
-                }
-                sprintf(output + strlen(output), "From %s (%s) ", result->ai_canonname, ip_buffer);
-                freeaddrinfo(result);
+                sprintf(output + strlen(output), "From %s (%s) ", ip_buffer, ip_buffer);
             }
 
             sprintf(output + strlen(output), "icmp_seq=%d ",
