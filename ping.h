@@ -75,10 +75,11 @@ typedef struct s_ping_context ping_context_t;
 
 void    initialize_context(int argc, char **argv);
 void    initialize_signals();
-int send_echo_msg_v4(
+int send_icmp_msg_v4(
         int sock,
         uint16_t id,
         uint8_t ttl,
+        uint8_t icmp_type,
         uint16_t icmp_seq_num,
         size_t payload_size,
         in_addr_t source_ip,

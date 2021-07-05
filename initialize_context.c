@@ -57,7 +57,11 @@ static void set_default_args() {
         perror("cannot read ttl var file");
         exit(EXIT_FAILURE);
     }
-    close(ttl_fd);
+    if (close(ttl_fd) == -1) {
+        perror("cannot close ttl var file");
+        exit(EXIT_FAILURE);
+    }
+
     ping_ctx.ttl = atoi(arr);
 
     // Set default interval between echoes
@@ -182,6 +186,7 @@ void initialize_context(int argc, char **argv) {
     int err_code = get_ipaddr_by_name(ping_ctx.dest, &ping_ctx.dest_addr);
     if (err_code) {
         fprintf(stderr, "%s: %s: %s\n", argv[0], ping_ctx.dest, gai_strerror(err_code));
+        exit(EXIT_FAILURE);
     }
 
     char hostname[1024] = {0};

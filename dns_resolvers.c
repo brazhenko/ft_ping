@@ -1,11 +1,10 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <netdb.h>
-#include <stdio.h>
 
 /*
  * Function: get_ipaddr_by_name
- * --------------------
+ * ----------------------------
  *      Makes a DNS resolution of domain name.
  *
  *  name - domain name (e.g. google.com)
@@ -14,7 +13,8 @@
  *      of  getaddrinfo() list.
  *
  *  returns:    0 - success
- *              OTHER - error, use gai_strerror() to discover a particular error
+ *              OTHER - error, use gai_strerror()
+ *              to discover a particular error
  */
 
 int get_ipaddr_by_name(const char *name, in_addr_t *out) {

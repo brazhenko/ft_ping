@@ -7,8 +7,8 @@
 static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t word_count);
 
 /*
- * Function: send_echo_msg_v4
- * --------------------
+ * Function: send_icmp_msg_v4
+ * --------------------------
  *      Makes up an icmp_v4 echo message
  *  (https://datatracker.ietf.org/doc/html/rfc792)
  *  and sends to a particular IP-address,
@@ -30,10 +30,11 @@ static uint16_t ipv4_icmp_checksum(const uint16_t *words, size_t word_count);
  *              1 - error, errno will be set in a particular errcode
  */
 
-int send_echo_msg_v4(
+int send_icmp_msg_v4(
         int sock,
         uint16_t id,
         uint8_t ttl,
+        uint8_t icmp_type,
         uint16_t icmp_seq_num,
         size_t payload_size,
         in_addr_t source_ip,
@@ -65,7 +66,7 @@ int send_echo_msg_v4(
 
     // Filling the ICMP header
     struct icmp *icmp_header = (struct icmp *)(message + ip_hdr_size);
-    icmp_header->icmp_type = ICMP_ECHO;
+    icmp_header->icmp_type = icmp_type;
     icmp_header->icmp_code = 0;
     icmp_header->icmp_cksum = 0;
     icmp_header->icmp_id = htons(id);

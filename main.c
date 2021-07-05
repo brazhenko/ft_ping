@@ -28,15 +28,16 @@ void print_iphdr(struct iphdr *ip)
 
 void ping() {
     while (true) {
-        if (send_echo_msg_v4(
+        if (send_icmp_msg_v4(
                 ping_ctx.icmp_sock,
                 getpid(),
                 ping_ctx.ttl,
+                ICMP_ECHO,
                 ping_ctx.messages_sent + 1,
                 ping_ctx.payload_size,
                 ((struct sockaddr_in *)ping_ctx.src_addr_info->ai_addr)->sin_addr.s_addr,
                 ping_ctx.dest_addr
-            ) != 0) {
+        ) != 0) {
 
             perror("cannot send echo");
             exit(EXIT_FAILURE);

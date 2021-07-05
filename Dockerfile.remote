@@ -30,7 +30,6 @@ RUN apt-get update \
       vim \
       git \
       tcpdump \
-      showip \
       net-tools \
   && apt-get clean
 
