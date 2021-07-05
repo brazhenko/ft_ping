@@ -8,7 +8,6 @@
 #include <unistd.h>
 #include <sys/time.h>
 
-struct addrinfo* ping_lookup(const char *bin_name, const char *host);
 ping_context_t ping_ctx = {};
 
 static void dump_usage(const char *bin_name) {
@@ -77,7 +76,6 @@ static void set_default_args() {
         exit(EXIT_FAILURE);
     }
 }
-int get_ipaddr_by_name(const char *name, in_addr_t *out);
 
 void initialize_context(int argc, char **argv) {
     set_default_args();

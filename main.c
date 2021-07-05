@@ -9,8 +9,6 @@
 #include <pthread.h>
 #include <sys/time.h>
 
-// getuid
-
 extern ping_context_t ping_ctx;
 
 void print_iphdr(struct iphdr *ip)
@@ -241,5 +239,3 @@ int main(int argc, char **argv) {
     async_ping();
     sync_pong();
 }
-
-
