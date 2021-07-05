@@ -219,45 +219,6 @@ void pong() {
     }
 }
 
-//struct addrinfo* ping_lookup(const char *bin_name, const char *host) {
-//    struct addrinfo hints, *res, *result;
-//    int errcode;
-//    char addrstr[100];
-//    void *ptr;
-//
-//    memset (&hints, 0, sizeof (hints));
-//    hints.ai_family = PF_INET;
-//    hints.ai_flags |= AI_CANONNAME;
-//    errcode = getaddrinfo(host, NULL, &hints, &result);
-//    if (errcode != 0) {
-//        fprintf(stderr, "%s: %s: %s\n", bin_name, host, gai_strerror(errcode));
-//        exit(EXIT_FAILURE);
-//    }
-//
-//    res = result;
-//
-//    printf ("Host: %s\n", host);
-//    if (res) {
-//        switch (res->ai_family)
-//        {
-//            case AF_INET:
-//                ptr = &((struct sockaddr_in *) res->ai_addr)->sin_addr;
-//                break;
-//            case AF_INET6:
-//                ptr = &((struct sockaddr_in6 *) res->ai_addr)->sin6_addr;
-//                break;
-//        }
-//        inet_ntop(res->ai_family, ptr, addrstr, 100);
-//        printf("IPv%d address: %s %s\n", res->ai_family == PF_INET6 ? 6 : 4, addrstr, res->ai_canonname);
-//    }
-//    else {
-//        fprintf(stderr, "Unknown error\n");
-//        exit(EXIT_FAILURE);
-//    }
-//
-//    return res;
-//}
-
 int main(int argc, char **argv) {
     initialize_context(argc, argv);
     initialize_signals();
