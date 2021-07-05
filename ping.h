@@ -53,15 +53,15 @@ static const size_t         icmp_hdr_size = sizeof (struct icmphdr); // Supposed
 struct s_ping_context {
     bool        flags[256];
     const char  *dest;
-    char        canon_dest[NI_MAXHOST];
-    int         icmp_sock;
+    char    canon_dest[NI_MAXHOST];
+    int     icmp_sock;
     in_addr_t   dest_addr;
     in_addr_t   src_addr;
-    int         payload_size;
-    size_t      response_count_limit;
-    size_t      seconds_to_work;
-    size_t      interval_between_echoes;
-    int         ttl;
+    int payload_size;
+    size_t  response_count_limit;
+    size_t  seconds_to_work;
+    int interval_between_echoes;
+    int ttl;
     size_t      messages_sent;
     size_t      messages_received;
     size_t      error_messages_received;
